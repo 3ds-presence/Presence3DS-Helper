@@ -1,0 +1,20 @@
+{
+  "rust-analyzer.check.overrideCommand": [
+    "cargo",
+    "3ds",
+    "clippy",
+    "--message-format=json-diagnostic-rendered-ansi",
+    "--",
+    "-W",
+    "clippy::all",
+    "-W",
+    "clippy::pedantic",
+    "-W",
+    "clippy::nursery"
+  ],
+  "rust-analyzer.server.extraEnv": {
+    "DEVKITPRO": "/opt/devkitpro",
+    "DEVKITARM": "/opt/devkitpro/devkitARM",
+    "PATH": "/opt/devkitpro/devkitARM/bin:/opt/devkitpro/tools/bin:/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin"
+  }
+}

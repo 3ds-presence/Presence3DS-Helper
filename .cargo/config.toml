@@ -1,0 +1,8 @@
+[build]
+target = "armv6k-nintendo-3ds"
+
+[unstable]
+build-std = []
+
+[target.armv6k-nintendo-3ds]
+linker = "/opt/devkitpro/devkitARM/bin/arm-none-eabi-gcc"
