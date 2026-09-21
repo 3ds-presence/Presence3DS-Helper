@@ -1,18 +1,13 @@
 use crate::model::message::Message;
 use crate::model::printer::Printer;
+use crate::views::Route;
 use crate::views::home_page::HomePage;
 use crate::views::page::Page;
 use ctru::prelude::{Console, Gfx, Hid};
 use ctru::services::gfx::Swap;
-use enum_dispatch::enum_dispatch;
-
-#[enum_dispatch(Page)]
-pub enum State {
-    Home(HomePage),
-}
 
 pub struct App<'a> {
-    state: State,
+    state: Route,
     printer: Printer<'a>,
     hid: Hid,
 }
@@ -25,7 +20,7 @@ impl<'a> App<'a> {
         let mut bottom_screen = Console::new(gfx.bottom_screen.borrow_mut());
         bottom_screen.set_double_buffering(true);
         let mut new_self = Self {
-            state: State::Home(HomePage::new()),
+            state: Route::Home(HomePage::new()),
             printer: Printer::new(top_screen, bottom_screen),
             hid,
         };
@@ -40,16 +35,35 @@ impl<'a> App<'a> {
         self.printer.bottom_screen.swap_buffers();
     }
 
-    pub fn app_loop(&mut self) -> bool {
-        self.hid.scan_input();
-        match self.state.handle_input(&self.hid) {
+    fn render(&mut self) {
+        self.state.render(&mut self.printer);
+        self.swap_buffers();
+    }
+
+    fn process_message(&mut self, message: Message) -> bool {
+        match message {
             Message::NeedRedraw => {
-                self.state.render(&mut self.printer);
-                self.swap_buffers();
+                self.render();
+                false
+            }
+            Message::Goto(route) => {
+                self.state = route;
+                self.render();
                 false
             }
             Message::Exit => true,
             Message::None => false,
         }
+    }
+    pub fn app_loop(&mut self) -> bool {
+        self.hid.scan_input();
+
+        let message = self.state.handle_input(&self.hid);
+        if self.process_message(message) {
+            return true;
+        }
+
+        let message = self.state.update();
+        self.process_message(message)
     }
 }

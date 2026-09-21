@@ -1,4 +1,6 @@
 use ctru::prelude::*;
+use ctru::services::ps::Ps;
+use ctru::services::soc::Soc;
 
 mod app;
 mod model;
@@ -9,6 +11,8 @@ use app::App;
 fn main() {
     let apt = Apt::new().unwrap();
     let gfx = Gfx::new().unwrap();
+    let _soc = Soc::new().unwrap();
+    let _ps = Ps::new().unwrap();
     let mut app = App::new(&gfx);
 
     while apt.main_loop() {

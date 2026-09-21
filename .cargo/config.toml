@@ -6,3 +6,8 @@ build-std = []
 
 [target.armv6k-nintendo-3ds]
 linker = "/opt/devkitpro/devkitARM/bin/arm-none-eabi-gcc"
+
+[env]
+CC_armv6k_nintendo_3ds = "/opt/devkitpro/devkitARM/bin/arm-none-eabi-gcc"
+AR_armv6k_nintendo_3ds = "/opt/devkitpro/devkitARM/bin/arm-none-eabi-ar"
+CFLAGS_armv6k_nintendo_3ds = "-mfloat-abi=hard -mfpu=vfp -march=armv6k -mtune=mpcore"

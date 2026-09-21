@@ -1,5 +1,8 @@
+use crate::model::Screen;
 use std::fmt::{Display, Formatter, Result, Write};
 use std::string::String;
+
+use crate::utils::constant::{CHAR_PER_LINE_BOTTOM, CHAR_PER_LINE_TOP};
 
 pub enum Attribute {
     Bold,
@@ -64,6 +67,19 @@ impl ColorString {
 
     pub const fn with_position(mut self, x: u8, y: u8) -> Self {
         self.position = Some([x, y]);
+        self
+    }
+
+    pub fn with_middle_position(mut self, screen: Screen) -> Self {
+        self.text = self.text.trim().to_string();
+
+        let text_length = self.text.chars().count();
+        let total_width = match screen {
+            Screen::Top => CHAR_PER_LINE_TOP as usize,
+            Screen::Bottom => CHAR_PER_LINE_BOTTOM as usize,
+        };
+        let middle = (total_width - text_length) / 2;
+        self.text = format!("{:width$}{}", "", self.text, width = middle);
         self
     }
 
