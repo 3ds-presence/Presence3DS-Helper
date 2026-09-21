@@ -3,6 +3,16 @@
 version = 4
 
 [[package]]
+name = "Presence3DS_Helper"
+version = "0.1.0"
+dependencies = [
+ "ctru-rs",
+ "ctru-sys",
+ "enum_dispatch",
+ "ureq",
+]
+
+[[package]]
 name = "adler2"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -620,16 +630,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
-]
-
-[[package]]
-name = "testapp"
-version = "0.1.0"
-dependencies = [
- "ctru-rs",
- "ctru-sys",
- "enum_dispatch",
- "ureq",
 ]
 
 [[package]]

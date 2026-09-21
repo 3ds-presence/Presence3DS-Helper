@@ -1,7 +1,8 @@
 [package]
-name = "testapp"
+name = "Presence3DS_Helper"
 version = "0.1.0"
 edition = "2024"
+authors = ["LeonLeBreton"]
 
 [dependencies]
 ctru-rs = { git = "https://github.com/rust3ds/ctru-rs" }
@@ -11,6 +12,9 @@ ureq = "3.4.2"
 
 [package.metadata.cargo-3ds]
 romfs_dir = "romfs"
+name = "Presence 3DS Helper"
+description = "Presence 3DS Downloader and Configurator"
+icon_path = "icon.png"
 
 [profile.release]
 opt-level = "z"
