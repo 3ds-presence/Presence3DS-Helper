@@ -5,6 +5,13 @@ edition = "2024"
 
 [dependencies]
 ctru-rs = { git = "https://github.com/rust3ds/ctru-rs" }
+enum_dispatch = "0.3.13"
 
 [package.metadata.cargo-3ds]
 romfs_dir = "romfs"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"

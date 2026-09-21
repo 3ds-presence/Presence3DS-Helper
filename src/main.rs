@@ -1,23 +1,24 @@
 use ctru::prelude::*;
 
+mod app;
+mod model;
+mod utils;
+mod views;
+
+use app::App;
 fn main() {
     let apt = Apt::new().unwrap();
-    let mut hid = Hid::new().unwrap();
     let gfx = Gfx::new().unwrap();
-    let console = Console::new(gfx.top_screen.borrow_mut());
-
-    println!("Hello, World!");
-    println!("\x1b[29;16HPress Start to exit");
+    let mut app = App::new(&gfx);
 
     while apt.main_loop() {
         gfx.wait_for_vblank();
 
-        hid.scan_input();
-        if hid.keys_down().contains(KeyPad::START) {
+        if app.app_loop() {
             break;
         }
     }
 
-    drop(console);
+    drop(app);
     drop(gfx);
 }
