@@ -18,6 +18,19 @@ impl Page for SecondExamplePage {
         );
         printer.clear_with_background(Screen::Bottom, [30, 34, 45]);
         printer.println(Screen::Bottom, "Press A to increment | START: exit");
+        printer.print(
+            Screen::Bottom,
+            ColorString::new("RED").with_fg_color([255, 0, 0]),
+        );
+        printer.print(
+            Screen::Bottom,
+            ColorString::new("GREEN").with_fg_color([0, 255, 0]),
+        );
+        printer.print(
+            Screen::Bottom,
+            ColorString::new("BLUE").with_fg_color([0, 0, 255]),
+        );
+        printer.println(Screen::Bottom, "");
     }
 
     fn handle_input(&mut self, hid: &Hid) -> Message {

@@ -22,7 +22,8 @@ impl Page for HomePage {
             Screen::Top,
             ColorString::new("Presence 3DS Helper")
                 .with_middle_position(Screen::Top)
-                .with_bg_color(default_background_color),
+                .color_the_entire_line(Screen::Top)
+                .with_bg_color([88, 101, 242]),
         );
         printer.println(Screen::Top, "");
 

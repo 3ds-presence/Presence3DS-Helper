@@ -15,6 +15,9 @@ pub struct ColorString {
     bg_color: Option<[u8; 3]>,
     fg_color: Option<[u8; 3]>,
     position: Option<[u8; 2]>,
+    apply_with_middle_position: bool,
+    on_screen: Option<Screen>,
+    entire_line: bool,
     attributes: Option<Attribute>,
 }
 
@@ -26,13 +29,8 @@ impl Display for ColorString {
 
 impl ColorString {
     pub fn new(text: &str) -> Self {
-        Self {
-            text: text.to_string(),
-            bg_color: None,
-            fg_color: None,
-            position: None,
-            attributes: None,
-        }
+        let string_text = text.to_string();
+        Self::new_from_string(string_text)
     }
 
     pub const fn new_from_string(text: String) -> Self {
@@ -41,6 +39,9 @@ impl ColorString {
             bg_color: None,
             fg_color: None,
             position: None,
+            apply_with_middle_position: false,
+            on_screen: None,
+            entire_line: false,
             attributes: None,
         }
     }
@@ -70,21 +71,50 @@ impl ColorString {
         self
     }
 
-    pub fn with_middle_position(mut self, screen: Screen) -> Self {
-        self.text = self.text.trim().to_string();
+    pub const fn with_middle_position(mut self, screen: Screen) -> Self {
+        self.apply_with_middle_position = true;
+        self.on_screen = Some(screen);
+        self
+    }
 
-        let text_length = self.text.chars().count();
-        let total_width = match screen {
+    fn calc_middle_position(&self, text: &str) -> usize {
+        let text_length = text.chars().count();
+        let total_width = match self.on_screen.unwrap() {
             Screen::Top => CHAR_PER_LINE_TOP as usize,
             Screen::Bottom => CHAR_PER_LINE_BOTTOM as usize,
         };
-        let middle = (total_width - text_length) / 2;
-        self.text = format!("{:width$}{}", "", self.text, width = middle);
+        (total_width - text_length) / 2
+    }
+
+    const fn calc_end_line(&self, text_lenght: usize) -> usize {
+        let total_width = match self.on_screen.unwrap() {
+            Screen::Top => CHAR_PER_LINE_TOP as usize,
+            Screen::Bottom => CHAR_PER_LINE_BOTTOM as usize,
+        };
+        
+        total_width - text_lenght
+    }
+
+    /// Must println, print will have a bad behavior
+    pub const fn color_the_entire_line(mut self, screen:Screen) -> Self {
+        self.entire_line = true;
+        self.on_screen = Some(screen);
         self
     }
 
     pub fn build(&self) -> String {
         let mut result = String::new();
+
+        let padding = if self.apply_with_middle_position {
+            let middle = self.calc_middle_position(self.text.as_str());
+            " ".repeat(middle)
+        } else {
+            String::new()
+        };
+
+        if !self.entire_line {
+            result.push_str(&padding);
+        }
 
         if let Some([bg_color_red, bg_color_green, bg_color_blue, ..]) = self.bg_color {
             let _ = write!(
@@ -112,7 +142,14 @@ impl ColorString {
             }
         }
 
+        if self.entire_line {
+            result.push_str(&padding);
+        }
         result.push_str(&self.text);
+        if self.entire_line {
+            let end_line = self.calc_end_line(padding.chars().count() + self.text.chars().count());
+            result.push_str(&" ".repeat(end_line));
+        }
         result.push_str("\x1b[0m");
 
         result

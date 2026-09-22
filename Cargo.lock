@@ -3,16 +3,6 @@
 version = 4
 
 [[package]]
-name = "Presence3DS_Helper"
-version = "0.1.0"
-dependencies = [
- "ctru-rs",
- "ctru-sys",
- "enum_dispatch",
- "ureq",
-]
-
-[[package]]
 name = "adler2"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -390,6 +380,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "67eabc2ef2a60eb7faa00097bd1ffdb5bd28e62bf39990626a582201b7a754e5"
 dependencies = [
  "siphasher",
+]
+
+[[package]]
+name = "presence3ds-helper"
+version = "0.1.0"
+dependencies = [
+ "ctru-rs",
+ "ctru-sys",
+ "enum_dispatch",
+ "ureq",
 ]
 
 [[package]]

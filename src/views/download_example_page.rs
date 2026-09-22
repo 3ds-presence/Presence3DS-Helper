@@ -1,7 +1,7 @@
 use crate::model::message::Message;
 use crate::model::printer::{Printer, Screen};
 use crate::utils::{
-    DownloadState, DownloadTask, color_string::ColorString, progress_bar, SdCardInfo,
+    DownloadState, DownloadTask, SdCardInfo, color_string::ColorString, shape::progress_bar,
 };
 use crate::views::page::Page;
 use ctru::services::hid::{Hid, KeyPad};
@@ -15,7 +15,6 @@ enum Status {
 }
 
 pub struct DownloadExamplePage {
-    counter: u32,
     sd_card: Option<SdCardInfo>,
     task: Option<DownloadTask<'static>>,
     progress: Option<(usize, usize, u8)>, // (current, total, %)
@@ -26,10 +25,6 @@ impl Page for DownloadExamplePage {
     fn render(&self, printer: &mut Printer<'_>) {
         printer.clear_with_background(Screen::Top, [30, 34, 45]);
         printer.println(Screen::Top, "Download example");
-        printer.println(
-            Screen::Top,
-            ColorString::new(&format!("Counter: {}", self.counter)).with_fg_color([255, 0, 0]),
-        );
 
         if self.task.is_some() {
             match self.progress {
@@ -96,7 +91,7 @@ impl Page for DownloadExamplePage {
                 current,
                 total,
                 percentage,
-                ..
+                current_chunk,
             } => {
                 self.progress = Some((current, total, percentage));
                 return Message::NeedRedraw;
@@ -115,7 +110,6 @@ impl Page for DownloadExamplePage {
 impl DownloadExamplePage {
     pub fn new() -> Self {
         Self {
-            counter: 0,
             sd_card: SdCardInfo::query(),
             task: None,
             progress: None,

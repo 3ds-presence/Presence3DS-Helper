@@ -1,5 +1,5 @@
 [package]
-name = "Presence3DS_Helper"
+name = "presence3ds-helper"
 version = "0.1.0"
 edition = "2024"
 authors = ["LeonLeBreton"]
