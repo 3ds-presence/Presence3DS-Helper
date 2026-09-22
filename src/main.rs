@@ -9,7 +9,7 @@ mod views;
 
 use app::App;
 fn main() {
-    let apt = Apt::new().unwrap();
+    let mut apt = Apt::new().unwrap();
     let gfx = Gfx::new().unwrap();
     let _soc = Soc::new().unwrap();
     let _ps = Ps::new().unwrap();
@@ -17,6 +17,7 @@ fn main() {
 
     while apt.main_loop() {
         gfx.wait_for_vblank();
+        apt.set_home_allowed(!app.blocks_home());
 
         if app.app_loop() {
             break;

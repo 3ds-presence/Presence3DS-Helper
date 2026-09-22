@@ -9,4 +9,8 @@ pub trait Page {
     fn update(&mut self) -> Message {
         Message::None
     }
+
+    fn blocks_home(&self) -> bool {
+        false
+    }
 }

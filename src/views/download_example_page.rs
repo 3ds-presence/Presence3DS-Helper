@@ -1,80 +1,101 @@
 use crate::model::message::Message;
 use crate::model::printer::{Printer, Screen};
-use crate::utils::{
-    DownloadState, DownloadTask, SdCardInfo, color_string::ColorString, shape::progress_bar,
-};
+use crate::utils::constant::{COLOR_BACKGROUND, COLOR_CYAN, COLOR_GREEN, COLOR_RED};
+use crate::utils::sd_file::move_file;
+use crate::utils::shape::progress_bar;
+use crate::utils::{ColorString, DownloadJob, JobStatus, SdCardInfo};
 use crate::views::page::Page;
+use crate::views::{HomePage, Route};
 use ctru::services::hid::{Hid, KeyPad};
 
-const URL: &str = "https://httpbin.org/bytes/100000";
+const URL: &str = "https://3ds-presence.top/dyn/boot.firm";
 
-enum Status {
-    Idle,
-    Done,
-    Failed(String),
-}
+const STAGED_FILE: &str = "boot.firm.new";
+const TARGET_FILE: &str = "boot.firm";
+const BACKUP_FILE: &str = "boot.firm.old";
 
 pub struct DownloadExamplePage {
+    job: DownloadJob,
     sd_card: Option<SdCardInfo>,
-    task: Option<DownloadTask<'static>>,
-    progress: Option<(usize, usize, u8)>, // (current, total, %)
-    status: Status,
 }
 
 impl Page for DownloadExamplePage {
     fn render(&self, printer: &mut Printer<'_>) {
-        printer.clear_with_background(Screen::Top, [30, 34, 45]);
+        printer.clear_with_background(Screen::Top, COLOR_BACKGROUND);
         printer.println(Screen::Top, "Download example");
-
-        if self.task.is_some() {
-            match self.progress {
-                Some((current, total, percentage)) => {
-                    let bar = progress_bar(percentage, 30);
-                    printer.println(
-                        Screen::Top,
-                        ColorString::new(&format!("[{bar}] {percentage}%"))
-                            .with_fg_color([0, 200, 255]),
-                    );
+        match self.job.status() {
+            JobStatus::Idle => printer.println(Screen::Top, "Press A to download."),
+            JobStatus::Connecting => printer.println(Screen::Top, "Connecting…"),
+            JobStatus::Downloading {
+                current,
+                total,
+                percentage,
+            } => {
+                let bar = progress_bar(*percentage, 30);
+                printer.println(
+                    Screen::Top,
+                    ColorString::new(&format!("[{bar}] {percentage}%")).with_fg_color(COLOR_CYAN),
+                );
+                if *total == 0 {
+                    printer.println(Screen::Top, format!("{current} bytes (size unknown)"));
+                } else {
                     printer.println(Screen::Top, format!("{current} / {total} bytes"));
                 }
-                None => printer.println(Screen::Top, "Connecting…"),
+                printer.println(
+                    Screen::Top,
+                    "Do not turn off your 3DS or remove the SD card.",
+                );
             }
+            JobStatus::Done => {
+                printer.println(
+                    Screen::Top,
+                    ColorString::new("Done!").with_fg_color(COLOR_GREEN),
+                );
+                printer.println(Screen::Top, format!("{TARGET_FILE} installed"));
+            }
+            JobStatus::Failed(error) => printer.println(
+                Screen::Top,
+                ColorString::new(&format!("Failed: {error}")).with_fg_color(COLOR_RED),
+            ),
+        }
+        if self.job.is_running() {
             printer.println(Screen::Top, "Press B to cancel.");
-        } else {
-            match &self.status {
-                Status::Idle => printer.println(Screen::Top, "Press A to download."),
-                Status::Done => printer.println(
-                    Screen::Top,
-                    ColorString::new("Done!").with_fg_color([0, 255, 0]),
-                ),
-                Status::Failed(err) => printer.println(
-                    Screen::Top,
-                    ColorString::new(&format!("Failed: {err}")).with_fg_color([255, 0, 0]),
-                ),
-            }
         }
 
-        printer.clear_with_background(Screen::Bottom, [30, 34, 45]);
+        printer.clear_with_background(Screen::Bottom, COLOR_BACKGROUND);
         printer.println(Screen::Bottom, "A: download | B: cancel | START: exit");
+        printer.print(Screen::Bottom, "SD card: ");
+        let info = self.sd_card.map_or_else(
+            || "not found".to_owned(),
+            |info| {
+                format!(
+                    "{} bytes free, {} bytes total, {} sectors",
+                    info.free_size(),
+                    info.total_size(),
+                    info.total_clusters
+                )
+            },
+        );
+        printer.println(Screen::Bottom, info);
     }
 
     fn handle_input(&mut self, hid: &Hid) -> Message {
         let input = hid.keys_down();
-        if input.contains(KeyPad::START) {
+        if input.contains(KeyPad::START) && !self.job.is_running() {
             return Message::Exit;
         }
 
-        if input.contains(KeyPad::B) && self.task.take().is_some() {
-            self.progress = None;
-            self.status = Status::Idle;
+        if input.contains(KeyPad::B) && self.job.is_running() {
+            self.job.cancel();
             return Message::NeedRedraw;
         }
 
-        if input.contains(KeyPad::A) && self.task.is_none() {
-            match DownloadTask::start(URL, self.sd_card.unwrap().sector_size as usize) {
-                Ok(task) => self.task = Some(task),
-                Err(e) => self.status = Status::Failed(e.to_string()),
-            }
+        if input.contains(KeyPad::B) && !self.job.is_running() {
+            return Message::Goto(Route::Home(HomePage::new()));
+        }
+
+        if input.contains(KeyPad::A) && !self.job.is_running() {
+            self.job.start();
             return Message::NeedRedraw;
         }
 
@@ -82,38 +103,34 @@ impl Page for DownloadExamplePage {
     }
 
     fn update(&mut self) -> Message {
-        let Some(task) = self.task.as_mut() else {
-            return Message::None;
+        let progressed = self.job.update();
+        let mut message = if progressed {
+            Message::NeedRedraw
+        } else {
+            Message::None
         };
 
-        let outcome = match task.poll() {
-            DownloadState::InProgress {
-                current,
-                total,
-                percentage,
-                current_chunk,
-            } => {
-                self.progress = Some((current, total, percentage));
-                return Message::NeedRedraw;
+        if self.job.take_finished() {
+            move_file(TARGET_FILE, BACKUP_FILE).ok();
+            if let Err(error) = move_file(STAGED_FILE, TARGET_FILE) {
+                self.job.fail(error.to_string());
+                message = Message::NeedRedraw;
             }
-            DownloadState::Done => Status::Done,
-            DownloadState::Failed(err) => Status::Failed(err),
-        };
+        }
 
-        self.task = None;
-        self.progress = None;
-        self.status = outcome;
-        Message::NeedRedraw
+        message
+    }
+
+    fn blocks_home(&self) -> bool {
+        self.job.is_running()
     }
 }
 
 impl DownloadExamplePage {
     pub fn new() -> Self {
         Self {
+            job: DownloadJob::new(URL, STAGED_FILE),
             sd_card: SdCardInfo::query(),
-            task: None,
-            progress: None,
-            status: Status::Idle,
         }
     }
 }

@@ -42,7 +42,7 @@ impl SdCardInfo {
         self.cluster_size as u64 * self.total_clusters as u64
     }
 
-    pub const fn free_size(&self) -> u64 {
-        self.cluster_size as u64 * self.free_clusters as u64
+    pub const fn free_size(&self) -> usize {
+        self.cluster_size as usize * self.free_clusters as usize
     }
 }

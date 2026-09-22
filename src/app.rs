@@ -55,6 +55,11 @@ impl<'a> App<'a> {
             Message::None => false,
         }
     }
+
+    pub fn blocks_home(&self) -> bool {
+        self.state.blocks_home()
+    }
+
     pub fn app_loop(&mut self) -> bool {
         self.hid.scan_input();
 

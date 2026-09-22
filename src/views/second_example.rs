@@ -2,6 +2,7 @@ use ctru::services::hid::{Hid, KeyPad};
 
 use crate::model::{Message, Printer, Screen};
 use crate::utils::color_string::ColorString;
+use crate::utils::constant::{COLOR_BACKGROUND, COLOR_BLUE, COLOR_GREEN, COLOR_RED};
 use crate::views::{HomePage, Page, Route};
 
 pub struct SecondExamplePage {
@@ -10,25 +11,25 @@ pub struct SecondExamplePage {
 
 impl Page for SecondExamplePage {
     fn render(&self, printer: &mut Printer<'_>) {
-        printer.clear_with_background(Screen::Top, [30, 34, 45]);
+        printer.clear_with_background(Screen::Top, COLOR_BACKGROUND);
         printer.println(Screen::Top, "Second example");
         printer.println(
             Screen::Top,
-            ColorString::new(&format!("Counter: {}", self.counter)).with_fg_color([255, 0, 0]),
+            ColorString::new(&format!("Counter: {}", self.counter)).with_fg_color(COLOR_RED),
         );
-        printer.clear_with_background(Screen::Bottom, [30, 34, 45]);
+        printer.clear_with_background(Screen::Bottom, COLOR_BACKGROUND);
         printer.println(Screen::Bottom, "Press A to increment | START: exit");
         printer.print(
             Screen::Bottom,
-            ColorString::new("RED").with_fg_color([255, 0, 0]),
+            ColorString::new("RED").with_fg_color(COLOR_RED),
         );
         printer.print(
             Screen::Bottom,
-            ColorString::new("GREEN").with_fg_color([0, 255, 0]),
+            ColorString::new("GREEN").with_fg_color(COLOR_GREEN),
         );
         printer.print(
             Screen::Bottom,
-            ColorString::new("BLUE").with_fg_color([0, 0, 255]),
+            ColorString::new("BLUE").with_fg_color(COLOR_BLUE),
         );
         printer.println(Screen::Bottom, "");
     }

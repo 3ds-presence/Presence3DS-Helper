@@ -91,12 +91,12 @@ impl ColorString {
             Screen::Top => CHAR_PER_LINE_TOP as usize,
             Screen::Bottom => CHAR_PER_LINE_BOTTOM as usize,
         };
-        
+
         total_width - text_lenght
     }
 
     /// Must println, print will have a bad behavior
-    pub const fn color_the_entire_line(mut self, screen:Screen) -> Self {
+    pub const fn color_the_entire_line(mut self, screen: Screen) -> Self {
         self.entire_line = true;
         self.on_screen = Some(screen);
         self

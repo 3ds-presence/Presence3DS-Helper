@@ -43,7 +43,7 @@ impl DownloadTask<'_> {
                     current: self.current,
                     total: self.total,
                     percentage: self.percentage(),
-                    current_chunk: &self.chunk,
+                    current_chunk: &self.chunk[..bytes_read],
                 }
             }
             Err(e) => {
@@ -52,6 +52,10 @@ impl DownloadTask<'_> {
                 state
             }
         }
+    }
+
+    pub const fn total_size(&self) -> usize {
+        self.total
     }
 
     fn terminal_state(&self) -> Option<DownloadState<'_>> {
@@ -71,7 +75,7 @@ pub enum DownloadState<'a> {
         current: usize,
         total: usize,
         percentage: u8,
-        current_chunk: &'a Vec<u8>,
+        current_chunk: &'a [u8],
     },
     Done,
     Failed(String),

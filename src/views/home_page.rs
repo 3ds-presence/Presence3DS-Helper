@@ -1,5 +1,6 @@
 use crate::model::{Message, Printer, Screen};
 use crate::utils::ColorString;
+use crate::utils::constant::{COLOR_ACCENT, COLOR_BACKGROUND, COLOR_RED};
 use crate::views::Route;
 use crate::views::{DownloadExamplePage, Page};
 use ctru::services::hid::{Hid, KeyPad};
@@ -16,14 +17,13 @@ pub struct HomePage {
 
 impl Page for HomePage {
     fn render(&self, printer: &mut Printer<'_>) {
-        let default_background_color = [30, 34, 45];
-        printer.clear_with_background(Screen::Top, default_background_color);
+        printer.clear_with_background(Screen::Top, COLOR_BACKGROUND);
         printer.println(
             Screen::Top,
             ColorString::new("Presence 3DS Helper")
                 .with_middle_position(Screen::Top)
                 .color_the_entire_line(Screen::Top)
-                .with_bg_color([88, 101, 242]),
+                .with_bg_color(COLOR_ACCENT),
         );
         printer.println(Screen::Top, "");
 
@@ -32,17 +32,17 @@ impl Page for HomePage {
                 printer.println(
                     Screen::Top,
                     ColorString::new(route.name)
-                        .with_fg_color([255, 0, 0])
-                        .with_bg_color(default_background_color),
+                        .with_fg_color(COLOR_RED)
+                        .with_bg_color(COLOR_BACKGROUND),
                 );
             } else {
                 printer.println(
                     Screen::Top,
-                    ColorString::new(route.name).with_bg_color(default_background_color),
+                    ColorString::new(route.name).with_bg_color(COLOR_BACKGROUND),
                 );
             }
         }
-        printer.clear_with_background(Screen::Bottom, default_background_color);
+        printer.clear_with_background(Screen::Bottom, COLOR_BACKGROUND);
         printer.println(Screen::Bottom, "Press START to exit.");
     }
 
