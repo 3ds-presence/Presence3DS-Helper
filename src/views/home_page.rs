@@ -2,7 +2,7 @@ use crate::model::{Message, Printer, Screen};
 use crate::utils::ColorString;
 use crate::utils::constant::{COLOR_ACCENT, COLOR_BACKGROUND, COLOR_RED};
 use crate::views::Route;
-use crate::views::{DownloadExamplePage, Page};
+use crate::views::{DownloadPresence3DSPage, Page};
 use ctru::services::hid::{Hid, KeyPad};
 
 struct RouteName {
@@ -73,8 +73,8 @@ impl HomePage {
     pub fn new() -> Self {
         let router: [RouteName; 2] = [
             RouteName {
-                name: "Download Example",
-                route: || Route::DownloadExample(DownloadExamplePage::new()),
+                name: "Download Presence 3DS",
+                route: || Route::DownloadPresence3DS(DownloadPresence3DSPage::new()),
             },
             RouteName {
                 name: "Second Example",

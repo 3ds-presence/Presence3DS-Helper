@@ -14,12 +14,12 @@ const STAGED_FILE: &str = "boot.firm.new";
 const TARGET_FILE: &str = "boot.firm";
 const BACKUP_FILE: &str = "boot.firm.old";
 
-pub struct DownloadExamplePage {
+pub struct DownloadPresence3DSPage {
     job: DownloadJob,
     sd_card: Option<SdCardInfo>,
 }
 
-impl Page for DownloadExamplePage {
+impl Page for DownloadPresence3DSPage {
     fn render(&self, printer: &mut Printer<'_>) {
         printer.clear_with_background(Screen::Top, COLOR_BACKGROUND);
         printer.println(Screen::Top, "Download example");
@@ -126,7 +126,7 @@ impl Page for DownloadExamplePage {
     }
 }
 
-impl DownloadExamplePage {
+impl DownloadPresence3DSPage {
     pub fn new() -> Self {
         Self {
             job: DownloadJob::new(URL, STAGED_FILE),
