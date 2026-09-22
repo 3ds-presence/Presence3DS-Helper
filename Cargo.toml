@@ -8,6 +8,7 @@ authors = ["LeonLeBreton"]
 ctru-rs = { git = "https://github.com/rust3ds/ctru-rs" }
 ctru-sys = { git = "https://github.com/rust3ds/ctru-rs" }
 enum_dispatch = "0.3.13"
+sha2 = "0.10"
 ureq = "3.4.2"
 
 [package.metadata.cargo-3ds]

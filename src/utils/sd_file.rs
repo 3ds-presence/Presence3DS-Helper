@@ -285,6 +285,12 @@ impl SdWriter {
             .map_err(|error| io_error(&self.temp_path, error))?;
         drop(file);
 
+        match fs::remove_file(&self.final_path) {
+            Ok(()) => {}
+            Err(error) if error.kind() == ErrorKind::NotFound => {}
+            Err(error) => return Err(io_error(&self.final_path, error)),
+        }
+
         fs::rename(&self.temp_path, &self.final_path)
             .map_err(|error| io_error(&self.temp_path, error))?;
 
@@ -382,6 +388,12 @@ pub fn move_file(from: &str, to: &str) -> Result<(), SdCardError> {
 
     if source == destination {
         return Ok(());
+    }
+
+    match fs::remove_file(&destination) {
+        Ok(()) => {}
+        Err(error) if error.kind() == ErrorKind::NotFound => {}
+        Err(error) => return Err(io_error(&destination, error)),
     }
 
     fs::rename(&source, &destination).map_err(|error| io_error(&source, error))

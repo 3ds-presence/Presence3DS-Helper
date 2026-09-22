@@ -3,6 +3,7 @@ pub mod color_string;
 pub mod constant;
 pub mod download_job;
 pub mod downloader;
+pub mod hash;
 pub mod sd_card;
 pub mod sd_file;
 pub mod shape;

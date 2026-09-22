@@ -30,7 +30,7 @@ struct Transfer {
 impl Transfer {
     fn start(url: &str, target: &str) -> Result<Self, String> {
         let sd_card = SdCardInfo::query().ok_or_else(|| "no SD card found".to_owned())?;
-        let task = DownloadTask::start(url, sd_card.sector_size as usize)
+        let task = DownloadTask::start(url, sd_card.cluster_size as usize)
             .map_err(|error| error.to_string())?;
 
         let needed = task.total_size();
