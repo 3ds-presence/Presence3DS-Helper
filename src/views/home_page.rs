@@ -71,7 +71,7 @@ impl Page for HomePage {
 
 impl HomePage {
     pub fn new() -> Self {
-        let router: [RouteName; 3] = [
+        let router: [RouteName; 2] = [
             RouteName {
                 name: "Download Presence 3DS",
                 route: || Route::DownloadPresence3DS(DownloadPresence3DSPage::new()),
@@ -79,13 +79,7 @@ impl HomePage {
             RouteName {
                 name: "Import config from QR",
                 route: || Route::ImportConfig(ImportConfigPage::new()),
-            },
-            RouteName {
-                name: "Second Example",
-                route: || {
-                    Route::SecondExample(crate::views::second_example::SecondExamplePage::new())
-                },
-            },
+            }
         ];
         Self {
             current_selection: 0,
