@@ -8,6 +8,7 @@ pub mod hash;
 pub mod sd_card;
 pub mod sd_file;
 pub mod shape;
+pub mod validate_config;
 
 pub use camera::Camera;
 pub use color_string::ColorString;

@@ -1,21 +1,32 @@
 use ctru::services::hid::{Hid, KeyPad};
 
 use crate::model::{Message, Printer, Screen};
+use crate::utils::ColorString;
 use crate::utils::constant::{COLOR_BACKGROUND, COLOR_GREEN, COLOR_RED};
 use crate::utils::sd_file::{ensure_dir, write_file};
-use crate::utils::ColorString;
+use crate::utils::validate_config::validate_config;
 use crate::views::{HomePage, Page, Route};
 
 pub struct ConfirmScanPage {
-    content: String,
+    uuid: Option<String>,
+    aes: Option<String>,
+    host: Option<String>,
+    port: Option<String>,
     status: Option<Result<(), String>>,
 }
 
 impl Page for ConfirmScanPage {
     fn render(&self, printer: &mut Printer<'_>) {
         printer.clear_with_background(Screen::Top, COLOR_BACKGROUND);
-        printer.println(Screen::Top, "Scanned QR code:");
-        printer.println(Screen::Top, self.content.as_str());
+        printer.println(Screen::Top, "Import config : ");
+        if let (Some(uuid), Some(_aes), Some(host), Some(port)) =
+            (&self.uuid, &self.aes, &self.host, &self.port)
+        {
+            printer.println(Screen::Top, format!("UUID: {uuid}"));
+            printer.println(Screen::Top, format!("Host: {host}:{port}"));
+        } else {
+            printer.println(Screen::Top, "Invalid config.");
+        }
 
         printer.clear_with_background(Screen::Bottom, COLOR_BACKGROUND);
         match &self.status {
@@ -49,20 +60,44 @@ impl Page for ConfirmScanPage {
     }
 
     fn on_goto(&mut self, payload: String) {
-        self.content = payload;
+        match validate_config(&payload) {
+            Ok(config) => {
+                let [uuid, aes, host, port] = config;
+                self.uuid = Some(uuid);
+                self.aes = Some(aes);
+                self.host = Some(host);
+                self.port = Some(port);
+                self.status = None;
+            }
+            Err(error) => self.status = Some(Err(error)),
+        }
     }
 }
 
 impl ConfirmScanPage {
     pub const fn new() -> Self {
         Self {
-            content: String::new(),
+            uuid: None,
+            aes: None,
+            host: None,
+            port: None,
             status: None,
         }
     }
 
     fn save(&self) -> Result<(), String> {
         ensure_dir("/presence3ds").map_err(|error| error.to_string())?;
-        write_file("/presence3ds/discord_rpc.conf", self.content.as_bytes()).map_err(|error| error.to_string())
+        write_file(
+            "/presence3ds/discord_rpc.conf",
+            format!(
+                "UUID={}\nAES_KEY={}\nSERVER_HOST={}\nSERVER_PORT={}\n",
+                self.uuid.as_ref().unwrap_or(&String::new()),
+                self.aes.as_ref().unwrap_or(&String::new()),
+                self.host.as_ref().unwrap_or(&String::new()),
+                self.port.as_ref().unwrap_or(&String::new())
+            )
+            .as_bytes(),
+        )
+        .map_err(|error| error.to_string())
     }
 }
