@@ -2,7 +2,7 @@ use ctru::services::hid::{Hid, KeyPad};
 use ctru_sys::svcGetSystemTick;
 
 use crate::model::{Message, Printer, Screen};
-use crate::utils::camera::{blit_to_top_screen};
+use crate::utils::camera::blit_to_top_screen;
 use crate::utils::constant::{COLOR_BACKGROUND, COLOR_RED};
 use crate::utils::{Camera, ColorString};
 use crate::views::{ConfirmScanPage, HomePage, Page, Route};

@@ -1,6 +1,6 @@
 use crate::model::{Message, Printer, Screen};
-use crate::utils::{ColorString, shape};
 use crate::utils::constant::{COLOR_BACKGROUND, COLOR_RED};
+use crate::utils::{ColorString, shape};
 use crate::views::Route;
 use crate::views::{DownloadPresence3DSPage, ImportConfigPage, Page};
 use ctru::services::hid::{Hid, KeyPad};
@@ -73,7 +73,7 @@ impl HomePage {
             RouteName {
                 name: "Import config from QR",
                 route: || Route::ImportConfig(ImportConfigPage::new()),
-            }
+            },
         ];
         Self {
             current_selection: 0,

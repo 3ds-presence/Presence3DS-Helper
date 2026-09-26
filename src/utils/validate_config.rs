@@ -16,7 +16,12 @@ pub fn validate_config(config: &str) -> Result<[String; 4], String> {
     validate_url(host)?;
     validate_port(port)?;
 
-    Ok([uuid.to_owned(), aes.to_owned(), host.to_owned(), port.to_owned()])
+    Ok([
+        uuid.to_owned(),
+        aes.to_owned(),
+        host.to_owned(),
+        port.to_owned(),
+    ])
 }
 
 pub fn validate_uuid(uuid: &str) -> Result<(), String> {
@@ -68,9 +73,9 @@ pub fn validate_url(url: &str) -> Result<(), String> {
         && host_ok(host)
         && path.is_none_or(|p| !p.chars().any(|c| c.is_whitespace() || c.is_control()));
 
-    valid.then_some(()).ok_or_else(|| {
-        format!("invalid url {url:?}: expected a host")
-    })
+    valid
+        .then_some(())
+        .ok_or_else(|| format!("invalid url {url:?}: expected a host"))
 }
 
 pub fn validate_port(port: &str) -> Result<(), String> {

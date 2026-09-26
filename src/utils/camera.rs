@@ -7,9 +7,8 @@ use ctru::services::cam::{
 use ctru_sys::{
     CAMU_Activate, CAMU_ClearBuffer, CAMU_GetBufferErrorInterruptEvent, CAMU_GetMaxBytes,
     CAMU_SetReceiving, CAMU_SetTransferBytes, CAMU_StartCapture, CAMU_StopCapture, GFX_LEFT,
-    GFX_TOP, Handle, SELECT_NONE, gfxFlushBuffers, gfxGetFramebuffer,
-    gfxScreenSwapBuffers, svcCloseHandle,
-    svcWaitSynchronizationN,
+    GFX_TOP, Handle, SELECT_NONE, gfxFlushBuffers, gfxGetFramebuffer, gfxScreenSwapBuffers,
+    svcCloseHandle, svcWaitSynchronizationN,
 };
 
 pub struct Camera {
@@ -158,9 +157,8 @@ impl Camera {
     pub fn scan_qr(&self) -> Option<String> {
         let (width, height) = self.size();
         let luma = self.frame_luma();
-        let mut image = rqrr::PreparedImage::prepare_from_greyscale(width, height, |x, y| {
-            luma[y * width + x]
-        });
+        let mut image =
+            rqrr::PreparedImage::prepare_from_greyscale(width, height, |x, y| luma[y * width + x]);
         let grids = image.detect_grids();
         grids
             .into_iter()
@@ -223,10 +221,10 @@ pub fn blit_to_top_screen(frame: &[u8], width: usize, height: usize) {
     // rotate 90 degrees while copying, pixel by pixel in u16.
     #[allow(clippy::cast_ptr_alignment)]
     let src = frame.as_ptr().cast::<u16>();
-    
+
     #[allow(clippy::cast_ptr_alignment)]
     let dst = framebuffer.cast::<u16>();
-    
+
     for row in 0..height {
         for column in 0..width {
             let pixel = unsafe { *src.add(row * width + column) };
