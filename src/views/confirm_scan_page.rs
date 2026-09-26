@@ -40,7 +40,7 @@ impl Page for ConfirmScanPage {
         if input.contains(KeyPad::B) {
             return Message::Goto(Route::Home(HomePage::new()), String::new());
         }
-        if input.contains(KeyPad::A) {
+        if input.contains(KeyPad::A) && self.status.clone().is_some_and(|s| s.is_ok()) {
             self.status = Some(self.save());
             return Message::NeedRedraw;
         }

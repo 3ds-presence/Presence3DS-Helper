@@ -1,6 +1,6 @@
 use crate::model::{Message, Printer, Screen};
-use crate::utils::ColorString;
-use crate::utils::constant::{COLOR_ACCENT, COLOR_BACKGROUND, COLOR_RED};
+use crate::utils::{ColorString, shape};
+use crate::utils::constant::{COLOR_BACKGROUND, COLOR_RED};
 use crate::views::Route;
 use crate::views::{DownloadPresence3DSPage, ImportConfigPage, Page};
 use ctru::services::hid::{Hid, KeyPad};
@@ -18,13 +18,7 @@ pub struct HomePage {
 impl Page for HomePage {
     fn render(&self, printer: &mut Printer<'_>) {
         printer.clear_with_background(Screen::Top, COLOR_BACKGROUND);
-        printer.println(
-            Screen::Top,
-            ColorString::new("Presence 3DS Helper")
-                .with_middle_position(Screen::Top)
-                .color_the_entire_line(Screen::Top)
-                .with_bg_color(COLOR_ACCENT),
-        );
+        printer.println(Screen::Top, shape::title_bar(Screen::Top));
         printer.println(Screen::Top, "");
 
         for (i, route) in self.router.iter().enumerate() {

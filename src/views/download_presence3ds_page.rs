@@ -3,7 +3,7 @@ use crate::model::printer::{Printer, Screen};
 use crate::utils::constant::{COLOR_BACKGROUND, COLOR_CYAN, COLOR_GREEN, COLOR_RED};
 use crate::utils::hash::verify_file_sha256;
 use crate::utils::sd_file::{delete_file, move_file};
-use crate::utils::shape::progress_bar;
+use crate::utils::shape::{self, progress_bar};
 use crate::utils::{ColorString, DownloadJob, JobStatus, SdCardInfo};
 use crate::views::page::Page;
 use crate::views::{HomePage, Route};
@@ -25,9 +25,10 @@ pub struct DownloadPresence3DSPage {
 impl Page for DownloadPresence3DSPage {
     fn render(&self, printer: &mut Printer<'_>) {
         printer.clear_with_background(Screen::Top, COLOR_BACKGROUND);
+        printer.println(Screen::Top, shape::title_bar(Screen::Top));
         printer.println(
             Screen::Top,
-            ColorString::new("Download example").with_bg_color(COLOR_BACKGROUND),
+            ColorString::new("Download/Update Presence 3DS").with_bg_color(COLOR_BACKGROUND),
         );
         match self.job.status() {
             JobStatus::Idle => printer.println(
