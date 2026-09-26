@@ -144,6 +144,29 @@ impl Camera {
         (self.width, self.height)
     }
 
+    pub fn frame_luma(&self) -> Vec<u8> {
+        let mut luma = vec![0u8; self.width * self.height];
+        for (index, pixel) in self.frame.as_chunks::<2>().0.iter().enumerate() {
+            let raw = u16::from_le_bytes([pixel[0], pixel[1]]);
+            let green = ((raw >> 5) & 0x3F) as u8; // 6 bits -> 0..=63
+            // Scale 0..=63 back to a full 0..=255 range.
+            luma[index] = (green << 2) | (green >> 4);
+        }
+        luma
+    }
+
+    pub fn scan_qr(&self) -> Option<String> {
+        let (width, height) = self.size();
+        let luma = self.frame_luma();
+        let mut image = rqrr::PreparedImage::prepare_from_greyscale(width, height, |x, y| {
+            luma[y * width + x]
+        });
+        let grids = image.detect_grids();
+        grids
+            .into_iter()
+            .find_map(|grid| grid.decode().ok().map(|(_, content)| content))
+    }
+
     fn close_receive_event(&mut self) {
         if self.receive_event != 0 {
             unsafe {
