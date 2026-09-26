@@ -31,7 +31,9 @@ impl<'a> App<'a> {
     }
 
     fn swap_buffers(&mut self) {
-        self.printer.top_screen.swap_buffers();
+        if !self.state.draws_top_screen_manually() {
+            self.printer.top_screen.swap_buffers();
+        }
         self.printer.bottom_screen.swap_buffers();
     }
 
@@ -48,6 +50,7 @@ impl<'a> App<'a> {
             }
             Message::Goto(route) => {
                 self.state = route;
+                self.swap_buffers();
                 self.render();
                 false
             }

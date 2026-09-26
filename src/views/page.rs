@@ -10,6 +10,10 @@ pub trait Page {
         Message::None
     }
 
+    fn draws_top_screen_manually(&self) -> bool {
+        false
+    }
+
     fn blocks_home(&self) -> bool {
         false
     }

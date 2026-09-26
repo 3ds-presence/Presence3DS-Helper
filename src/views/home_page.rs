@@ -2,7 +2,7 @@ use crate::model::{Message, Printer, Screen};
 use crate::utils::ColorString;
 use crate::utils::constant::{COLOR_ACCENT, COLOR_BACKGROUND, COLOR_RED};
 use crate::views::Route;
-use crate::views::{DownloadPresence3DSPage, Page};
+use crate::views::{DownloadPresence3DSPage, ImportConfigPage, Page};
 use ctru::services::hid::{Hid, KeyPad};
 
 struct RouteName {
@@ -71,10 +71,14 @@ impl Page for HomePage {
 
 impl HomePage {
     pub fn new() -> Self {
-        let router: [RouteName; 2] = [
+        let router: [RouteName; 3] = [
             RouteName {
                 name: "Download Presence 3DS",
                 route: || Route::DownloadPresence3DS(DownloadPresence3DSPage::new()),
+            },
+            RouteName {
+                name: "Import config from QR",
+                route: || Route::ImportConfig(ImportConfigPage::new()),
             },
             RouteName {
                 name: "Second Example",

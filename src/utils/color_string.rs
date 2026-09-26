@@ -95,7 +95,7 @@ impl ColorString {
         total_width - text_lenght
     }
 
-    /// Must println, print will have a bad behavior
+    /// Must use println, print renders incorrectly.
     pub const fn color_the_entire_line(mut self, screen: Screen) -> Self {
         self.entire_line = true;
         self.on_screen = Some(screen);
