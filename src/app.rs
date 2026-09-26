@@ -48,8 +48,9 @@ impl<'a> App<'a> {
                 self.render();
                 false
             }
-            Message::Goto(route) => {
+            Message::Goto(route, payload) => {
                 self.state = route;
+                self.state.on_goto(payload);
                 self.swap_buffers();
                 self.render();
                 false

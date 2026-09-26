@@ -146,7 +146,7 @@ impl Page for DownloadPresence3DSPage {
         }
 
         if input.contains(KeyPad::B) && !self.job.is_running() {
-            return Message::Goto(Route::Home(HomePage::new()));
+            return Message::Goto(Route::Home(HomePage::new()), String::new());
         }
 
         if input.contains(KeyPad::A) && !self.job.is_running() {

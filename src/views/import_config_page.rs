@@ -5,13 +5,12 @@ use crate::model::{Message, Printer, Screen};
 use crate::utils::camera::{blit_to_top_screen};
 use crate::utils::constant::{COLOR_BACKGROUND, COLOR_RED};
 use crate::utils::{Camera, ColorString};
-use crate::views::{HomePage, Page, Route};
+use crate::views::{ConfirmScanPage, HomePage, Page, Route};
 
 const SCAN_INTERVAL_TICKS: u64 = 268_111_856 * 3 / 10;
 
 pub struct ImportConfigPage {
     camera: Result<Camera, String>,
-    scanned: Option<String>,
     next_scan_tick: u64,
 }
 
@@ -19,15 +18,7 @@ impl Page for ImportConfigPage {
     fn render(&self, printer: &mut Printer<'_>) {
         printer.clear_with_background(Screen::Bottom, COLOR_BACKGROUND);
         match &self.camera {
-            Ok(_) => match &self.scanned {
-                Some(content) => {
-                    printer.println(Screen::Bottom, "QR code scanned:");
-                    printer.println(Screen::Bottom, content.as_str());
-                }
-                None => {
-                    printer.println(Screen::Bottom, "Point the QR code at the camera.");
-                }
-            },
+            Ok(_) => printer.println(Screen::Bottom, "Point the QR code at the camera."),
             Err(error) => printer.println(
                 Screen::Bottom,
                 ColorString::new(error).with_fg_color(COLOR_RED),
@@ -42,7 +33,7 @@ impl Page for ImportConfigPage {
             return Message::Exit;
         }
         if input.contains(KeyPad::B) {
-            return Message::Goto(Route::Home(HomePage::new()));
+            return Message::Goto(Route::Home(HomePage::new()), String::new());
         }
 
         Message::None
@@ -57,14 +48,11 @@ impl Page for ImportConfigPage {
             let (width, height) = camera.size();
             blit_to_top_screen(camera.frame(), width, height);
 
-            if self.scanned.is_none() {
-                let now = unsafe { svcGetSystemTick() };
-                if now >= self.next_scan_tick {
-                    self.next_scan_tick = now + SCAN_INTERVAL_TICKS;
-                    if let Some(content) = camera.scan_qr() {
-                        self.scanned = Some(content);
-                        return Message::NeedRedraw;
-                    }
+            let now = unsafe { svcGetSystemTick() };
+            if now >= self.next_scan_tick {
+                self.next_scan_tick = now + SCAN_INTERVAL_TICKS;
+                if let Some(content) = camera.scan_qr() {
+                    return Message::Goto(Route::ConfirmScan(ConfirmScanPage::new()), content);
                 }
             }
         }
@@ -81,7 +69,6 @@ impl ImportConfigPage {
     pub fn new() -> Self {
         Self {
             camera: Camera::new().map_err(|error| error.to_string()),
-            scanned: None,
             next_scan_tick: 0,
         }
     }

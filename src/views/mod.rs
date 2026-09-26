@@ -1,9 +1,11 @@
+pub mod confirm_scan_page;
 pub mod download_presence3ds_page;
 pub mod home_page;
 pub mod page;
 pub mod second_example;
 pub mod import_config_page;
 
+pub use confirm_scan_page::ConfirmScanPage;
 pub use download_presence3ds_page::DownloadPresence3DSPage;
 pub use home_page::HomePage;
 pub use page::Page;
@@ -20,4 +22,5 @@ pub enum Route {
     DownloadPresence3DS(DownloadPresence3DSPage),
     SecondExample(SecondExamplePage),
     ImportConfig(ImportConfigPage),
+    ConfirmScan(ConfirmScanPage),
 }

@@ -10,6 +10,8 @@ pub trait Page {
         Message::None
     }
 
+    fn on_goto(&mut self, _payload: String) {}
+
     fn draws_top_screen_manually(&self) -> bool {
         false
     }

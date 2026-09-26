@@ -62,7 +62,7 @@ impl Page for HomePage {
         }
 
         if input.contains(KeyPad::A) {
-            return Message::Goto((self.router[self.current_selection].route)());
+            return Message::Goto((self.router[self.current_selection].route)(), String::new());
         }
 
         Message::None

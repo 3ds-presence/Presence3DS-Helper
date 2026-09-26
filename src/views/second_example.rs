@@ -41,7 +41,7 @@ impl Page for SecondExamplePage {
         }
 
         if input.contains(KeyPad::B) {
-            return Message::Goto(Route::Home(HomePage::new()));
+            return Message::Goto(Route::Home(HomePage::new()), String::new());
         }
 
         if input.contains(KeyPad::A) {
