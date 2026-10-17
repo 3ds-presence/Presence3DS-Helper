@@ -15,8 +15,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::{
-    model::Screen,
-    utils::{ColorString, constant::COLOR_ACCENT},
+    model::{Printer, Screen},
+    utils::{
+        ColorString,
+        constant::{COLOR_ACCENT, COLOR_BACKGROUND, COLOR_BACKGROUND_INVERTED},
+    },
 };
 
 pub fn progress_bar(percentage: u8, width: usize) -> String {
@@ -27,9 +30,65 @@ pub fn progress_bar(percentage: u8, width: usize) -> String {
     bar
 }
 
+pub fn download_section(
+    printer: &mut Printer<'_>,
+    filename: &str,
+    current: usize,
+    total: usize,
+    percentage: u8,
+) {
+    let print_here = |printer: &mut Printer<'_>, txt: &str, bg_color: [u8; 3]| {
+        printer.print(Screen::Top, ColorString::new(txt).with_bg_color(bg_color));
+    };
+
+    printer.println(
+        Screen::Top,
+        ColorString::centered_full_line(filename, Screen::Top, COLOR_BACKGROUND),
+    );
+
+    print_here(printer, " ".repeat(10).as_str(), COLOR_BACKGROUND);
+    print_here(printer, " ".repeat(30).as_str(), COLOR_BACKGROUND_INVERTED);
+    print_here(printer, " ".repeat(10).as_str(), COLOR_BACKGROUND);
+    printer.println(Screen::Top, "");
+
+    print_here(printer, " ".repeat(10).as_str(), COLOR_BACKGROUND);
+    print_here(printer, " ", COLOR_BACKGROUND_INVERTED);
+    print_here(printer, &progress_bar(percentage, 25), COLOR_BACKGROUND);
+    print_here(
+        printer,
+        format!("{:02}%", percentage.min(99)).as_str(),
+        COLOR_BACKGROUND,
+    );
+    print_here(printer, " ", COLOR_BACKGROUND_INVERTED);
+    print_here(printer, " ".repeat(10).as_str(), COLOR_BACKGROUND);
+    printer.println(Screen::Top, "");
+
+    print_here(printer, " ".repeat(10).as_str(), COLOR_BACKGROUND);
+    print_here(printer, " ".repeat(30).as_str(), COLOR_BACKGROUND_INVERTED);
+    print_here(printer, " ".repeat(10).as_str(), COLOR_BACKGROUND);
+    printer.println(Screen::Top, "");
+
+    if total == 0 {
+        printer.println(
+            Screen::Top,
+            ColorString::centered_full_line(
+                &format!("{current} bytes (size unknown)"),
+                Screen::Top,
+                COLOR_BACKGROUND,
+            ),
+        );
+    } else {
+        printer.println(
+            Screen::Top,
+            ColorString::centered_full_line(
+                &format!("{current} / {total} bytes"),
+                Screen::Top,
+                COLOR_BACKGROUND,
+            ),
+        );
+    }
+}
+
 pub fn title_bar(screen: Screen) -> ColorString {
-    ColorString::new("Presence 3DS Helper")
-        .with_middle_position(screen)
-        .color_the_entire_line(screen)
-        .with_bg_color(COLOR_ACCENT)
+    ColorString::centered_full_line("Presence 3DS Helper", screen, COLOR_ACCENT)
 }

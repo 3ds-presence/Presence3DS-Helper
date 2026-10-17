@@ -14,20 +14,24 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use ctru::services::hid::{Hid, KeyPad};
-use ctru_sys::svcGetSystemTick;
+use std::sync::{Arc, Mutex};
 
 use crate::model::{Message, Printer, Screen};
-use crate::utils::camera::blit_to_top_screen;
+use crate::utils::camera::{blit_to_top_screen, decode_qr_from_luma};
 use crate::utils::constant::{COLOR_BACKGROUND, COLOR_RED};
+use crate::utils::worker_thread;
 use crate::utils::{Camera, ColorString};
 use crate::views::{ConfirmScanPage, HomePage, Page, Route};
+use ctru::services::hid::{Hid, KeyPad};
 
-const SCAN_INTERVAL_TICKS: u64 = 268_111_856 * 3 / 10;
+enum QrScanResult {
+    NotFound,
+    Found(String),
+}
 
 pub struct ImportConfigPage {
     camera: Result<Camera, String>,
-    next_scan_tick: u64,
+    pending: Option<Arc<Mutex<Option<QrScanResult>>>>,
 }
 
 impl Page for ImportConfigPage {
@@ -64,12 +68,8 @@ impl Page for ImportConfigPage {
             let (width, height) = camera.size();
             blit_to_top_screen(camera.frame(), width, height);
 
-            let now = unsafe { svcGetSystemTick() };
-            if now >= self.next_scan_tick {
-                self.next_scan_tick = now + SCAN_INTERVAL_TICKS;
-                if let Some(content) = camera.scan_qr() {
-                    return Message::Goto(Route::ConfirmScan(ConfirmScanPage::new()), content);
-                }
+            if let Some(content) = Self::scan_qr(camera, &mut self.pending) {
+                return Message::Goto(Route::ConfirmScan(ConfirmScanPage::new()), content);
             }
         }
 
@@ -85,7 +85,50 @@ impl ImportConfigPage {
     pub fn new() -> Self {
         Self {
             camera: Camera::new().map_err(|error| error.to_string()),
-            next_scan_tick: 0,
+            pending: None,
+        }
+    }
+
+    fn scan_qr(
+        camera: &Camera,
+        pending: &mut Option<Arc<Mutex<Option<QrScanResult>>>>,
+    ) -> Option<String> {
+        let finished = pending
+            .as_ref()
+            .and_then(|slot| slot.try_lock().ok())
+            .and_then(|mut guard| guard.take());
+        if let Some(result) = finished {
+            *pending = None;
+            // Scan result
+            if let QrScanResult::Found(content) = result {
+                return Some(content);
+            }
+        }
+
+        // Scan in progress
+        if pending.is_some() {
+            return None;
+        }
+
+        // New scan
+        let (width, height) = camera.size();
+        let luma = camera.frame_luma();
+        let slot = Arc::new(Mutex::new(None));
+        let worker_slot = Arc::clone(&slot);
+        let job = move || {
+            let content = decode_qr_from_luma(width, height, &luma);
+            let result = content.map_or(QrScanResult::NotFound, QrScanResult::Found);
+            if let Ok(mut guard) = worker_slot.lock() {
+                *guard = Some(result);
+            }
+        };
+
+        match worker_thread::spawn_low_priority(512 * 1024, job) {
+            Ok(()) => {
+                *pending = Some(slot);
+                None
+            }
+            Err(_) => camera.scan_qr(),
         }
     }
 }

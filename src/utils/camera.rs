@@ -173,12 +173,7 @@ impl Camera {
     pub fn scan_qr(&self) -> Option<String> {
         let (width, height) = self.size();
         let luma = self.frame_luma();
-        let mut image =
-            rqrr::PreparedImage::prepare_from_greyscale(width, height, |x, y| luma[y * width + x]);
-        let grids = image.detect_grids();
-        grids
-            .into_iter()
-            .find_map(|grid| grid.decode().ok().map(|(_, content)| content))
+        decode_qr_from_luma(width, height, &luma)
     }
 
     fn close_receive_event(&mut self) {
@@ -221,6 +216,18 @@ impl Drop for Camera {
             let _ = CAMU_Activate(SELECT_NONE.into());
         }
     }
+}
+
+pub fn decode_qr_from_luma(width: usize, height: usize, luma: &[u8]) -> Option<String> {
+    if luma.len() < width.saturating_mul(height) {
+        return None;
+    }
+    let mut image =
+        rqrr::PreparedImage::prepare_from_greyscale(width, height, |x, y| luma[y * width + x]);
+    let grids = image.detect_grids();
+    grids
+        .into_iter()
+        .find_map(|grid| grid.decode().ok().map(|(_, content)| content))
 }
 
 pub fn blit_to_top_screen(frame: &[u8], width: usize, height: usize) {

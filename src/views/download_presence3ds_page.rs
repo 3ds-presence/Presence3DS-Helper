@@ -16,10 +16,10 @@
 
 use crate::model::message::Message;
 use crate::model::printer::{Printer, Screen};
-use crate::utils::constant::{COLOR_BACKGROUND, COLOR_CYAN, COLOR_GREEN, COLOR_RED};
+use crate::utils::constant::{COLOR_BACKGROUND, COLOR_GREEN, COLOR_RED};
 use crate::utils::hash::verify_file_sha256;
 use crate::utils::sd_file::{delete_file, move_file};
-use crate::utils::shape::{self, progress_bar};
+use crate::utils::shape::{self};
 use crate::utils::{ColorString, DownloadJob, JobStatus, SdCardInfo};
 use crate::views::page::Page;
 use crate::views::{HomePage, Route};
@@ -42,46 +42,44 @@ impl Page for DownloadPresence3DSPage {
     fn render(&self, printer: &mut Printer<'_>) {
         printer.clear_with_background(Screen::Top, COLOR_BACKGROUND);
         printer.println(Screen::Top, shape::title_bar(Screen::Top));
+        printer.println(Screen::Top, "");
         printer.println(
             Screen::Top,
-            ColorString::new("Download/Update Presence 3DS").with_bg_color(COLOR_BACKGROUND),
+            ColorString::centered_full_line(
+                "Download/Update Presence 3DS",
+                Screen::Top,
+                COLOR_BACKGROUND,
+            ),
         );
+        printer.goto_line(Screen::Top, 8);
         match self.job.status() {
             JobStatus::Idle => printer.println(
                 Screen::Top,
-                ColorString::new("Press A to download.").with_bg_color(COLOR_BACKGROUND),
+                ColorString::centered_full_line(
+                    "Press A to download.",
+                    Screen::Top,
+                    COLOR_BACKGROUND,
+                ),
             ),
             JobStatus::Connecting => printer.println(
                 Screen::Top,
-                ColorString::new("Connecting…").with_bg_color(COLOR_BACKGROUND),
+                ColorString::centered_full_line("Connecting...", Screen::Top, COLOR_BACKGROUND),
             ),
             JobStatus::Downloading {
                 current,
                 total,
                 percentage,
             } => {
-                let bar = progress_bar(*percentage, 30);
+                shape::download_section(printer, TARGET_FILE, *current, *total, *percentage);
+
+                printer.println(Screen::Top, "");
                 printer.println(
                     Screen::Top,
-                    ColorString::new(&format!("[{bar}] {percentage}%")).with_fg_color(COLOR_CYAN),
-                );
-                if *total == 0 {
-                    printer.println(
+                    ColorString::centered_full_line(
+                        "Do not turn off your 3DS or remove the SD card.",
                         Screen::Top,
-                        ColorString::new(&format!("{current} bytes (size unknown)"))
-                            .with_bg_color(COLOR_BACKGROUND),
-                    );
-                } else {
-                    printer.println(
-                        Screen::Top,
-                        ColorString::new(&format!("{current} / {total} bytes"))
-                            .with_bg_color(COLOR_BACKGROUND),
-                    );
-                }
-                printer.println(
-                    Screen::Top,
-                    ColorString::new("Do not turn off your 3DS or remove the SD card.")
-                        .with_bg_color(COLOR_BACKGROUND),
+                        COLOR_BACKGROUND,
+                    ),
                 );
             }
             JobStatus::Done => {
@@ -114,9 +112,14 @@ impl Page for DownloadPresence3DSPage {
             ),
         }
         if self.job.is_running() {
+            printer.goto_last_line(Screen::Top);
             printer.println(
                 Screen::Top,
-                ColorString::new("Press B to cancel.").with_bg_color(COLOR_BACKGROUND),
+                ColorString::centered_full_line(
+                    "Press B to cancel.",
+                    Screen::Top,
+                    COLOR_BACKGROUND,
+                ),
             );
         }
 
@@ -201,7 +204,6 @@ impl Page for DownloadPresence3DSPage {
             self.verifying = false;
             message = Message::NeedRedraw;
         }
-
         message
     }
 

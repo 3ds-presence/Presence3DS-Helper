@@ -62,6 +62,13 @@ impl ColorString {
         }
     }
 
+    pub fn centered_full_line(text: &str, screen: Screen, bg_color: [u8; 3]) -> Self {
+        Self::new(text)
+            .with_bg_color(bg_color)
+            .with_middle_position(screen)
+            .color_the_entire_line(screen)
+    }
+
     pub fn with_text(mut self, text: String) -> Self {
         self.text = text;
         self

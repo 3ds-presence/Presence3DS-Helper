@@ -16,6 +16,7 @@
 
 use std::fmt::Display;
 
+use crate::utils::constant::MAX_LINES;
 use ctru::console::Console;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -28,6 +29,8 @@ pub struct Printer<'a> {
     pub top_screen: Console<'a>,
     pub bottom_screen: Console<'a>,
     last_used: Option<Screen>,
+    current_top_line: u8,
+    current_bottom_line: u8,
 }
 
 impl<'a> Printer<'a> {
@@ -36,6 +39,8 @@ impl<'a> Printer<'a> {
             top_screen,
             bottom_screen,
             last_used: None,
+            current_top_line: 0,
+            current_bottom_line: 0,
         }
     }
 
@@ -59,14 +64,73 @@ impl<'a> Printer<'a> {
         self.select_screen(screen);
         print!("\x1b[0m\x1b[48;2;{};{};{}m", color[0], color[1], color[2]);
         print!("\x1b[2J");
+        *self.line_mut(screen) = 0;
     }
-    pub fn print<T: Display>(&mut self, screen: Screen, text: T) {
+
+    pub const fn current_line(&self, screen: Screen) -> u8 {
+        self.line(screen)
+    }
+
+    pub fn goto_line(&mut self, screen: Screen, line: u8) {
+        let target = line.min(MAX_LINES);
+        while self.line(screen) < target {
+            self.println(screen, "");
+            if self.line(screen) >= MAX_LINES {
+                break;
+            }
+        }
+    }
+
+    pub fn goto_last_line(&mut self, screen: Screen) {
+        self.goto_line(screen, MAX_LINES - 1);
+    }
+
+    fn do_print(&mut self, screen: Screen, text: impl Display, newline: bool) {
+        if self.line(screen) >= MAX_LINES {
+            return;
+        }
+        let formatted = format!("{text}");
         self.select_screen(screen);
-        print!("{text}");
+
+        if newline {
+            println!("{formatted}");
+        } else {
+            print!("{formatted}");
+        }
+
+        #[allow(clippy::cast_possible_truncation)]
+        let newlines = formatted
+            .bytes()
+            .filter(|&b| b == b'\n')
+            .count()
+            .min(MAX_LINES as usize) as u8;
+        self.advance(screen, newlines.saturating_add(u8::from(newline)));
+    }
+
+    pub fn print(&mut self, screen: Screen, text: impl Display) {
+        self.do_print(screen, text, false);
     }
 
     pub fn println<T: Display>(&mut self, screen: Screen, text: T) {
-        self.select_screen(screen);
-        println!("{text}");
+        self.do_print(screen, text, true);
+    }
+
+    const fn line(&self, screen: Screen) -> u8 {
+        match screen {
+            Screen::Top => self.current_top_line,
+            Screen::Bottom => self.current_bottom_line,
+        }
+    }
+
+    const fn line_mut(&mut self, screen: Screen) -> &mut u8 {
+        match screen {
+            Screen::Top => &mut self.current_top_line,
+            Screen::Bottom => &mut self.current_bottom_line,
+        }
+    }
+
+    pub fn advance(&mut self, screen: Screen, count: u8) {
+        let line = self.line_mut(screen);
+        *line = line.saturating_add(count).min(MAX_LINES);
     }
 }
