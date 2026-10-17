@@ -14,7 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc::{self, Receiver, TryRecvError};
+use std::sync::Arc;
+
 use crate::utils::sd_file::SdWriter;
+use crate::utils::worker_thread::{self, ThreadPriority};
 use crate::utils::{DownloadState, DownloadTask, SdCardInfo};
 
 #[derive(PartialEq, Eq)]
@@ -34,7 +39,7 @@ pub struct DownloadJob {
     url: String,
     target: String,
     status: JobStatus,
-    transfer: Option<Transfer>,
+    running: Option<Running>,
     finished: bool,
 }
 
@@ -73,45 +78,25 @@ impl Transfer {
     }
 }
 
-impl DownloadJob {
-    pub fn new(url: &str, target: &str) -> Self {
-        Self {
-            url: url.to_owned(),
-            target: target.to_owned(),
-            status: JobStatus::Idle,
-            transfer: None,
-            finished: false,
-        }
-    }
+struct Running {
+    rx: Receiver<JobStatus>,
+    cancel: Arc<AtomicBool>,
+}
 
-    pub fn start(&mut self) {
-        if self.transfer.is_some() {
+fn run_download(url: &str, target: &str, tx: &mpsc::Sender<JobStatus>, cancel: &Arc<AtomicBool>) {
+    let mut transfer = match Transfer::start(url, target) {
+        Ok(transfer) => transfer,
+        Err(error) => {
+            let _ = tx.send(JobStatus::Failed(error));
             return;
         }
+    };
 
-        self.finished = false;
-        self.status = match Transfer::start(&self.url, &self.target) {
-            Ok(transfer) => {
-                self.transfer = Some(transfer);
-                JobStatus::Connecting
-            }
-            Err(error) => JobStatus::Failed(error),
-        };
-    }
-
-    pub fn cancel(&mut self) {
-        self.finished = false;
-        self.status = match self.transfer.take().map(Transfer::abort) {
-            Some(Err(error)) => JobStatus::Failed(error),
-            _ => JobStatus::Idle,
-        };
-    }
-
-    pub fn update(&mut self) -> bool {
-        let Some(transfer) = self.transfer.as_mut() else {
-            return false;
-        };
-
+    loop {
+        if cancel.load(Ordering::Relaxed) {
+            let _ = transfer.abort();
+            return;
+        }
         match transfer.task.poll() {
             DownloadState::InProgress {
                 current,
@@ -119,31 +104,130 @@ impl DownloadJob {
                 percentage,
                 current_chunk,
             } => {
-                if let Err(error) = transfer.writer.write_chunk(current_chunk) {
-                    self.fail(error.to_string());
-                } else {
+                // Copy chunk: poll() borrows `transfer`, send() needs owned data.
+                let chunk = current_chunk.to_vec();
+                if let Err(error) = transfer.writer.write_chunk(&chunk) {
+                    let _ = transfer.abort();
+                    let _ = tx.send(JobStatus::Failed(error.to_string()));
+                    return;
+                }
+                if tx
+                    .send(JobStatus::Downloading {
+                        current,
+                        total,
+                        percentage,
+                    })
+                    .is_err()
+                {
+                    let _ = transfer.abort();
+                    return;
+                }
+            }
+            DownloadState::Done => {
+                let status = match transfer.commit() {
+                    Ok(()) => JobStatus::Done,
+                    Err(error) => JobStatus::Failed(error),
+                };
+                let _ = tx.send(status);
+                return;
+            }
+            DownloadState::Failed(error) => {
+                let _ = transfer.abort();
+                let _ = tx.send(JobStatus::Failed(error));
+                return;
+            }
+        }
+    }
+}
+
+impl DownloadJob {
+    pub fn new(url: &str, target: &str) -> Self {
+        Self {
+            url: url.to_owned(),
+            target: target.to_owned(),
+            status: JobStatus::Idle,
+            running: None,
+            finished: false,
+        }
+    }
+
+    pub fn start(&mut self) {
+        if self.running.is_some() {
+            return;
+        }
+
+        self.finished = false;
+        let (tx, rx) = mpsc::channel();
+        let cancel = Arc::new(AtomicBool::new(false));
+        let url = self.url.clone();
+        let target = self.target.clone();
+        let worker_cancel = Arc::clone(&cancel);
+        if worker_thread::spawn_with_priority(
+            512 * 1024,
+            move || {
+                run_download(&url, &target, &tx, &worker_cancel);
+            },
+            ThreadPriority::Low,
+        )
+        .is_err()
+        {
+            self.status = JobStatus::Failed("cannot start download thread".to_owned());
+            return;
+        }
+        self.running = Some(Running { rx, cancel });
+        self.status = JobStatus::Connecting;
+    }
+
+    pub fn cancel(&mut self) {
+        self.finished = false;
+        if let Some(running) = self.running.take() {
+            running.cancel.store(true, Ordering::Relaxed);
+            // Drain late worker messages so a stale Done/Failed cannot leak
+            // into the next start().
+            while running.rx.try_recv().is_ok() {}
+        }
+        self.status = JobStatus::Idle;
+    }
+
+    pub fn update(&mut self) -> bool {
+        let Some(running) = self.running.as_ref() else {
+            return false;
+        };
+
+        let mut progressed = false;
+        loop {
+            match running.rx.try_recv() {
+                Ok(JobStatus::Downloading {
+                    current,
+                    total,
+                    percentage,
+                }) => {
                     self.status = JobStatus::Downloading {
                         current,
                         total,
                         percentage,
                     };
+                    progressed = true;
+                }
+                Ok(JobStatus::Done) => {
+                    self.running.take();
+                    self.finished = true;
+                    self.status = JobStatus::Done;
+                    return true;
+                }
+                Ok(status) => {
+                    self.running.take();
+                    self.status = status;
+                    return true;
+                }
+                Err(TryRecvError::Empty) => return progressed,
+                Err(TryRecvError::Disconnected) => {
+                    // Worker exited without a terminal status (e.g. cancelled):
+                    self.running.take();
+                    return progressed;
                 }
             }
-            DownloadState::Done => {
-                if let Some(transfer) = self.transfer.take() {
-                    match transfer.commit() {
-                        Ok(()) => {
-                            self.finished = true;
-                            self.status = JobStatus::Done;
-                        }
-                        Err(error) => self.status = JobStatus::Failed(error),
-                    }
-                }
-            }
-            DownloadState::Failed(error) => self.fail(error),
         }
-
-        true
     }
 
     pub fn take_finished(&mut self) -> bool {
@@ -155,13 +239,13 @@ impl DownloadJob {
     }
 
     pub const fn is_running(&self) -> bool {
-        self.transfer.is_some()
+        self.running.is_some()
     }
 
     pub fn fail(&mut self, error: String) {
-        self.status = match self.transfer.take().map(Transfer::abort) {
-            Some(Err(cleanup)) => JobStatus::Failed(format!("{error}; clean-up failed: {cleanup}")),
-            _ => JobStatus::Failed(error),
-        };
+        if let Some(running) = self.running.take() {
+            running.cancel.store(true, Ordering::Relaxed);
+        }
+        self.status = JobStatus::Failed(error);
     }
 }

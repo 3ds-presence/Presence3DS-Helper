@@ -123,7 +123,7 @@ impl ImportConfigPage {
             }
         };
 
-        match worker_thread::spawn_low_priority(512 * 1024, job) {
+        match worker_thread::spawn_with_priority(512 * 1024, job, worker_thread::ThreadPriority::Low) {
             Ok(()) => {
                 *pending = Some(slot);
                 None
