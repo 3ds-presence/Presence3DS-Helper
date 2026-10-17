@@ -15,8 +15,10 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use std::fmt::Display;
+use std::io::Write;
 
 use crate::utils::constant::MAX_LINES;
+use crate::utils::formatter::encode_cp437;
 use ctru::console::Console;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -73,7 +75,6 @@ impl<'a> Printer<'a> {
 
     pub fn new_line(&mut self, screen: Screen, number: u8) {
         self.goto_line(screen, self.line(screen).saturating_add(number));
-        
     }
 
     pub fn goto_line(&mut self, screen: Screen, line: u8) {
@@ -94,17 +95,20 @@ impl<'a> Printer<'a> {
         if self.line(screen) >= MAX_LINES {
             return;
         }
-        let formatted = format!("{text}");
-        self.select_screen(screen);
-
+        let formatted_initial = format!("{text}");
+        let mut formatted_vec = encode_cp437(&formatted_initial);
         if newline {
-            println!("{formatted}");
-        } else {
-            print!("{formatted}");
+            formatted_vec.push(b'\n');
         }
 
+        self.select_screen(screen);
+
+        let mut out = std::io::stdout();
+        let _ = out.write_all(&formatted_vec);
+        let _ = out.flush();
+
         #[allow(clippy::cast_possible_truncation)]
-        let newlines = formatted
+        let newlines = formatted_initial
             .bytes()
             .filter(|&b| b == b'\n')
             .count()
