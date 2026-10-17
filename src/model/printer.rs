@@ -71,6 +71,11 @@ impl<'a> Printer<'a> {
         self.line(screen)
     }
 
+    pub fn new_line(&mut self, screen: Screen, number: u8) {
+        self.goto_line(screen, self.line(screen).saturating_add(number));
+        
+    }
+
     pub fn goto_line(&mut self, screen: Screen, line: u8) {
         let target = line.min(MAX_LINES);
         while self.line(screen) < target {
@@ -129,7 +134,7 @@ impl<'a> Printer<'a> {
         }
     }
 
-    pub fn advance(&mut self, screen: Screen, count: u8) {
+    fn advance(&mut self, screen: Screen, count: u8) {
         let line = self.line_mut(screen);
         *line = line.saturating_add(count).min(MAX_LINES);
     }

@@ -20,7 +20,7 @@ use crate::utils::constant::{COLOR_BACKGROUND, COLOR_GREEN, COLOR_RED};
 use crate::utils::hash::verify_file_sha256;
 use crate::utils::sd_file::{delete_file, move_file};
 use crate::utils::shape::{self};
-use crate::utils::{ColorString, DownloadJob, JobStatus, SdCardInfo};
+use crate::utils::{ColorString, DownloadJob, JobStatus, SdCardInfo, power};
 use crate::views::page::Page;
 use crate::views::{HomePage, Route};
 use ctru::services::hid::{Hid, KeyPad};
@@ -86,30 +86,70 @@ impl Page for DownloadPresence3DSPage {
                 if self.verifying {
                     printer.println(
                         Screen::Top,
-                        ColorString::new("Downloaded, verifying SHA256...")
-                            .with_bg_color(COLOR_BACKGROUND),
+                        ColorString::centered_full_line("Downloaded, verifying SHA256...", Screen::Top, COLOR_BACKGROUND)
                     );
                     printer.println(
                         Screen::Top,
-                        ColorString::new("Do not turn off your 3DS.")
-                            .with_bg_color(COLOR_BACKGROUND),
+                        ColorString::centered_full_line("Do not turn off your 3DS.", Screen::Top, COLOR_BACKGROUND),
                     );
                 } else {
                     printer.println(
                         Screen::Top,
-                        ColorString::new("Done!").with_fg_color(COLOR_GREEN),
+                        ColorString::centered_full_line("Done!", Screen::Top, COLOR_BACKGROUND).with_fg_color(COLOR_GREEN),
                     );
                     printer.println(
                         Screen::Top,
-                        ColorString::new(&format!("{TARGET_FILE} installed"))
-                            .with_bg_color(COLOR_BACKGROUND),
+                        ColorString::centered_full_line(&format!("{TARGET_FILE} installed"), Screen::Top, COLOR_BACKGROUND),
+                    );
+                    printer.new_line(Screen::Top, 1);
+                    printer.println(
+                        Screen::Top,
+                        ColorString::centered_full_line("Press A to reboot.", Screen::Top, COLOR_BACKGROUND),
+                    );
+                    printer.println(
+                        Screen::Top,
+                        ColorString::centered_full_line("Press B to return to the menu.", Screen::Top, COLOR_BACKGROUND),
                     );
                 }
             }
-            JobStatus::Failed(error) => printer.println(
-                Screen::Top,
-                ColorString::new(&format!("Failed: {error}")).with_fg_color(COLOR_RED),
-            ),
+            JobStatus::Failed(error) => {
+                printer.println(
+                    Screen::Top,
+                    ColorString::centered_full_line("Failed!", Screen::Top, COLOR_BACKGROUND)
+                        .with_fg_color(COLOR_RED),
+                );
+
+                printer.new_line(Screen::Top, 1);
+
+                let trace_color = [145, 115, 115];
+                printer.println(
+                    Screen::Top,
+                    ColorString::centered_full_line(
+                        "Error details:",
+                        Screen::Top,
+                        COLOR_BACKGROUND,
+                    )
+                    .with_fg_color(trace_color),
+                );
+
+                error.split(": ").for_each(|elem| {
+                    printer.println(
+                        Screen::Top,
+                        ColorString::centered_full_line(elem, Screen::Top, COLOR_BACKGROUND)
+                            .with_fg_color(trace_color),
+                    );
+                });
+
+                printer.new_line(Screen::Top, 1);
+                printer.println(
+                    Screen::Top,
+                    ColorString::centered_full_line(
+                        "Press A to retry.",
+                        Screen::Top,
+                        COLOR_BACKGROUND,
+                    ),
+                );
+            }
         }
         if self.job.is_running() {
             printer.goto_last_line(Screen::Top);
@@ -169,9 +209,15 @@ impl Page for DownloadPresence3DSPage {
             return Message::Goto(Route::Home(HomePage::new()), String::new());
         }
 
-        if input.contains(KeyPad::A) && !self.job.is_running() {
+        if input.contains(KeyPad::A)
+            && (self.job.status().is_idle() || self.job.status().is_failed())
+        {
             self.job.start();
             return Message::NeedRedraw;
+        }
+
+        if input.contains(KeyPad::A) && self.job.status().is_done() {
+            power::reboot(); // Well, no need to return a message here, the system will reboot anyway
         }
 
         Message::None

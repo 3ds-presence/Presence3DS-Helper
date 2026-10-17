@@ -35,6 +35,28 @@ pub enum JobStatus {
     Failed(String),
 }
 
+impl JobStatus {
+    pub const fn is_idle(&self) -> bool {
+        matches!(self, Self::Idle)
+    }
+
+    pub const fn is_downloading(&self) -> bool {
+        matches!(self, Self::Downloading { .. })
+    }
+
+    pub const fn is_connecting(&self) -> bool {
+        matches!(self, Self::Connecting)
+    }
+
+    pub const fn is_done(&self) -> bool {
+        matches!(self, Self::Done)
+    }
+
+    pub const fn is_failed(&self) -> bool {
+        matches!(self, Self::Failed(_))
+    }
+}
+
 pub struct DownloadJob {
     url: String,
     target: String,

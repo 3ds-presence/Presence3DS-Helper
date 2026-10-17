@@ -26,6 +26,7 @@ pub mod sd_file;
 pub mod shape;
 pub mod validate_config;
 pub mod worker_thread;
+pub mod power;
 
 pub use camera::Camera;
 pub use color_string::ColorString;
