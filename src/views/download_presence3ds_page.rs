@@ -164,30 +164,11 @@ impl Page for DownloadPresence3DSPage {
         }
 
         printer.clear_with_background(Screen::Bottom, COLOR_BACKGROUND);
-        printer.println(
-            Screen::Bottom,
-            ColorString::new("A: download | B: cancel | START: exit")
-                .with_bg_color(COLOR_BACKGROUND),
-        );
-        printer.print(
-            Screen::Bottom,
-            ColorString::new("SD card: ").with_bg_color(COLOR_BACKGROUND),
-        );
-        let info = self.sd_card.map_or_else(
-            || "not found".to_owned(),
-            |info| {
-                format!(
-                    "{} bytes free, {} bytes total, {} sectors",
-                    info.free_size(),
-                    info.total_size(),
-                    info.total_clusters
-                )
-            },
-        );
-        printer.println(
-            Screen::Bottom,
-            ColorString::new_from_string(info).with_bg_color(COLOR_BACKGROUND),
-        );
+
+        if !self.job.is_running() {
+            printer.goto_last_line(Screen::Bottom);
+            printer.println(Screen::Bottom, ColorString::centered_full_line("Press START to exit", Screen::Bottom, COLOR_BACKGROUND));
+        }
     }
 
     fn handle_input(&mut self, hid: &Hid) -> Message {

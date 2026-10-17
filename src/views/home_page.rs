@@ -53,7 +53,9 @@ impl Page for HomePage {
             }
         }
         printer.clear_with_background(Screen::Bottom, COLOR_BACKGROUND);
-        printer.println(Screen::Bottom, "Press START to exit.");
+        
+        printer.goto_last_line(Screen::Bottom);
+        printer.println(Screen::Bottom, ColorString::centered_full_line("Press START to exit", Screen::Bottom, COLOR_BACKGROUND));
     }
 
     fn handle_input(&mut self, hid: &Hid) -> Message {

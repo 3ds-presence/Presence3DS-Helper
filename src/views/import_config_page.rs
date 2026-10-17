@@ -38,13 +38,51 @@ impl Page for ImportConfigPage {
     fn render(&self, printer: &mut Printer<'_>) {
         printer.clear_with_background(Screen::Bottom, COLOR_BACKGROUND);
         match &self.camera {
-            Ok(_) => printer.println(Screen::Bottom, "Point the QR code at the camera."),
+            Ok(_) => {
+                printer.println(
+                    Screen::Bottom,
+                    ColorString::centered_full_line(
+                        "Point the QR code at the camera",
+                        Screen::Bottom,
+                        COLOR_BACKGROUND,
+                    ),
+                );
+                printer.println(
+                    Screen::Bottom,
+                    ColorString::centered_full_line(
+                        "Scanning ...",
+                        Screen::Bottom,
+                        COLOR_BACKGROUND,
+                    ),
+                );
+                printer.new_line(Screen::Bottom, 2);
+                printer.println(
+                    Screen::Bottom,
+                    ColorString::centered_full_line(
+                        "Find the QR code in 3DS Presence website (https://3ds-presence.top)",
+                        Screen::Bottom,
+                        COLOR_BACKGROUND,
+                    ),
+                );
+            }
             Err(error) => printer.println(
                 Screen::Bottom,
                 ColorString::new(error).with_fg_color(COLOR_RED),
             ),
         }
-        printer.println(Screen::Bottom, "B: back | START: exit");
+
+        printer.new_line(Screen::Bottom, 2);
+        printer.println(Screen::Bottom, "Press B to return to the menu");
+
+        printer.goto_last_line(Screen::Bottom);
+        printer.println(
+            Screen::Bottom,
+            ColorString::centered_full_line(
+                "Press START to exit",
+                Screen::Bottom,
+                COLOR_BACKGROUND,
+            ),
+        );
     }
 
     fn handle_input(&mut self, hid: &Hid) -> Message {
@@ -123,7 +161,11 @@ impl ImportConfigPage {
             }
         };
 
-        match worker_thread::spawn_with_priority(512 * 1024, job, worker_thread::ThreadPriority::Low) {
+        match worker_thread::spawn_with_priority(
+            512 * 1024,
+            job,
+            worker_thread::ThreadPriority::Low,
+        ) {
             Ok(()) => {
                 *pending = Some(slot);
                 None

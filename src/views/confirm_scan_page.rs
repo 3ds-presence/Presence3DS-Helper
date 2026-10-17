@@ -17,7 +17,7 @@
 use ctru::services::hid::{Hid, KeyPad};
 
 use crate::model::{Message, Printer, Screen};
-use crate::utils::ColorString;
+use crate::utils::{ColorString, shape};
 use crate::utils::constant::{COLOR_BACKGROUND, COLOR_GREEN, COLOR_RED};
 use crate::utils::sd_file::{ensure_dir, write_file};
 use crate::utils::validate_config::validate_config;
@@ -34,6 +34,7 @@ pub struct ConfirmScanPage {
 impl Page for ConfirmScanPage {
     fn render(&self, printer: &mut Printer<'_>) {
         printer.clear_with_background(Screen::Top, COLOR_BACKGROUND);
+        shape::title_bar(Screen::Top);
         printer.println(Screen::Top, "Import config : ");
         if let (Some(uuid), Some(_aes), Some(host), Some(port)) =
             (&self.uuid, &self.aes, &self.host, &self.port)
