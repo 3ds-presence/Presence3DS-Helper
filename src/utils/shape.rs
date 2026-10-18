@@ -37,8 +37,8 @@ pub fn download_section(
     total: usize,
     percentage: u8,
 ) {
-    let print_here = |printer: &mut Printer<'_>, txt: &str, bg_color: [u8; 3]| {
-        printer.print(Screen::Top, ColorString::new(txt).with_bg_color(bg_color));
+let print_here = |printer: &mut Printer<'_>, txt: &str| {
+        printer.print(Screen::Top, ColorString::new(txt).with_bg_color(COLOR_BACKGROUND));
     };
 
     printer.println(
@@ -46,26 +46,25 @@ pub fn download_section(
         ColorString::centered_full_line(filename, Screen::Top, COLOR_BACKGROUND),
     );
 
-    print_here(printer, " ".repeat(10).as_str(), COLOR_BACKGROUND);
-    print_here(printer, " ".repeat(30).as_str(), COLOR_BACKGROUND_INVERTED);
-    print_here(printer, " ".repeat(10).as_str(), COLOR_BACKGROUND);
+    print_here(printer, " ".repeat(10).as_str());
+    print_here(printer, &format!("╔{}╗", "═".repeat(28)));
+    print_here(printer, " ".repeat(10).as_str());
     printer.println(Screen::Top, "");
 
-    print_here(printer, " ".repeat(10).as_str(), COLOR_BACKGROUND);
-    print_here(printer, " ", COLOR_BACKGROUND_INVERTED);
-    print_here(printer, &progress_bar(percentage, 25), COLOR_BACKGROUND);
+    print_here(printer, " ".repeat(10).as_str());
+    print_here(printer, "║");
+    print_here(printer, &progress_bar(percentage, 25));
     print_here(
         printer,
         format!("{:02}%", percentage.min(99)).as_str(),
-        COLOR_BACKGROUND,
     );
-    print_here(printer, " ", COLOR_BACKGROUND_INVERTED);
-    print_here(printer, " ".repeat(10).as_str(), COLOR_BACKGROUND);
+    print_here(printer, "║");
+    print_here(printer, " ".repeat(10).as_str());
     printer.println(Screen::Top, "");
 
-    print_here(printer, " ".repeat(10).as_str(), COLOR_BACKGROUND);
-    print_here(printer, " ".repeat(30).as_str(), COLOR_BACKGROUND_INVERTED);
-    print_here(printer, " ".repeat(10).as_str(), COLOR_BACKGROUND);
+    print_here(printer, " ".repeat(10).as_str());
+    print_here(printer, &format!("╚{}╝", "═".repeat(28)));
+    print_here(printer, " ".repeat(10).as_str());
     printer.println(Screen::Top, "");
 
     if total == 0 {

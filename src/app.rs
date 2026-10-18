@@ -40,6 +40,7 @@ impl<'a> App<'a> {
             printer: Printer::new(top_screen, bottom_screen),
             hid,
         };
+        new_self.state.render(&mut new_self.printer);
         new_self.swap_buffers();
         new_self.state.render(&mut new_self.printer);
         new_self.swap_buffers();
@@ -67,7 +68,6 @@ impl<'a> App<'a> {
             Message::Goto(route, payload) => {
                 self.state = route;
                 self.state.on_goto(payload);
-                self.swap_buffers();
                 self.render();
                 false
             }
