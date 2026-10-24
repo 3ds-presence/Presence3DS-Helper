@@ -9,9 +9,10 @@ ctru-rs = { git = "https://github.com/rust3ds/ctru-rs" }
 ctru-sys = { git = "https://github.com/rust3ds/ctru-rs" }
 enum_dispatch = "0.3.13"
 rqrr = { version = "0.11.0", default-features = false }
-sha2 = "0.10"
-ureq = "3.4.2"
+sha2 = "0.11"
+ureq = "3.5.0"
 codepage-437 = "0.1"
+hex = "0.4"
 
 [package.metadata.cargo-3ds]
 romfs_dir = "romfs"

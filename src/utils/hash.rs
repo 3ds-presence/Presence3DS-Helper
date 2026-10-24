@@ -45,7 +45,7 @@ pub fn sha256_hex_of_file(path: &str) -> Result<String, SdCardError> {
     }
 
     let digest = hasher.finalize();
-    Ok(format!("{digest:x}"))
+    Ok(hex::encode(digest))
 }
 
 pub fn fetch_expected_sha256(url: &str) -> Result<String, String> {
