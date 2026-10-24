@@ -14,7 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::model::{Message, Printer};
+use crate::ui::printer::Printer;
+use crate::views::confirm_scan_page::ConfirmScanPage;
+use crate::views::download_presence3ds_page::DownloadPresence3DSPage;
+use crate::views::home_page::HomePage;
+use crate::views::import_config_page::ImportConfigPage;
 use ctru::services::hid::Hid;
 use enum_dispatch::enum_dispatch;
 
@@ -35,4 +39,19 @@ pub trait Page {
     fn blocks_home(&self) -> bool {
         false
     }
+}
+
+#[enum_dispatch(Page)]
+pub enum Route {
+    Home(HomePage),
+    DownloadPresence3DS(DownloadPresence3DSPage),
+    ImportConfig(ImportConfigPage),
+    ConfirmScan(ConfirmScanPage),
+}
+
+pub enum Message {
+    None,
+    NeedRedraw,
+    Goto(Route, String),
+    Exit,
 }

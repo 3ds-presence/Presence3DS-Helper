@@ -14,15 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::model::message::Message;
-use crate::model::printer::{Printer, Screen};
-use crate::utils::constant::{COLOR_BACKGROUND, COLOR_GREEN, COLOR_RED};
+use crate::router::{Message, Page, Route};
+use crate::ui::constants::{COLOR_BACKGROUND, COLOR_GREEN, COLOR_RED};
+use crate::ui::printer::{Printer, Screen};
+use crate::ui::{style::ColorString, widgets};
 use crate::utils::hash::verify_file_sha256;
+use crate::utils::power;
 use crate::utils::sd_file::{delete_file, move_file};
-use crate::utils::shape::{self};
-use crate::utils::{ColorString, DownloadJob, JobStatus, SdCardInfo, power};
-use crate::views::page::Page;
-use crate::views::{HomePage, Route};
+use crate::utils::{DownloadJob, JobStatus, SdCardInfo};
+use crate::views::HomePage;
 use ctru::services::hid::{Hid, KeyPad};
 
 const URL: &str = "https://3ds-presence.top/dyn/boot.firm";
@@ -41,7 +41,7 @@ pub struct DownloadPresence3DSPage {
 impl Page for DownloadPresence3DSPage {
     fn render(&self, printer: &mut Printer<'_>) {
         printer.clear_with_background(Screen::Top, COLOR_BACKGROUND);
-        printer.println(Screen::Top, shape::title_bar(Screen::Top));
+        printer.println(Screen::Top, widgets::title_bar(Screen::Top));
         printer.println(
             Screen::Top,
             ColorString::centered_full_line(
@@ -69,7 +69,7 @@ impl Page for DownloadPresence3DSPage {
                 total,
                 percentage,
             } => {
-                shape::download_section(printer, TARGET_FILE, *current, *total, *percentage);
+                widgets::download_section(printer, TARGET_FILE, *current, *total, *percentage);
 
                 printer.println(
                     Screen::Top,

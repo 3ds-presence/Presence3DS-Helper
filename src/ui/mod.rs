@@ -14,9 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pub mod message;
+#![allow(dead_code)]
+pub mod constants;
 pub mod printer;
-
-pub use message::Message;
-pub use printer::Printer;
-pub use printer::Screen;
+pub mod style;
+pub mod widgets;

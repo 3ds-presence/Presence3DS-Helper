@@ -14,11 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::model::message::Message;
-use crate::model::printer::Printer;
-use crate::views::Route;
+use crate::router::{Message, Page, Route};
+use crate::ui::printer::Printer;
 use crate::views::home_page::HomePage;
-use crate::views::page::Page;
 use ctru::prelude::{Console, Gfx, Hid};
 use ctru::services::gfx::Swap;
 

@@ -16,12 +16,13 @@
 
 use ctru::services::hid::{Hid, KeyPad};
 
-use crate::model::{Message, Printer, Screen};
-use crate::utils::constant::{COLOR_BACKGROUND, COLOR_GREEN, COLOR_RED};
+use crate::router::{Message, Page, Route};
+use crate::ui::constants::{COLOR_BACKGROUND, COLOR_GREEN, COLOR_RED};
+use crate::ui::printer::{Printer, Screen};
+use crate::ui::{style::ColorString, widgets};
 use crate::utils::sd_file::{ensure_dir, write_file};
 use crate::utils::validate_config::validate_config;
-use crate::utils::{ColorString, shape};
-use crate::views::{HomePage, Page, Route};
+use crate::views::HomePage;
 
 pub struct ConfirmScanPage {
     uuid: Option<String>,
@@ -34,7 +35,7 @@ pub struct ConfirmScanPage {
 impl Page for ConfirmScanPage {
     fn render(&self, printer: &mut Printer<'_>) {
         printer.clear_with_background(Screen::Top, COLOR_BACKGROUND);
-        printer.println(Screen::Top, shape::title_bar(Screen::Top));
+        printer.println(Screen::Top, widgets::title_bar(Screen::Top));
         if let (Some(uuid), Some(_aes), Some(host), Some(port)) =
             (&self.uuid, &self.aes, &self.host, &self.port)
         {

@@ -14,12 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{
-    model::{Printer, Screen},
-    utils::{
-        ColorString,
-        constant::{COLOR_ACCENT, COLOR_BACKGROUND},
-    },
+use crate::ui::{
+    constants::{COLOR_ACCENT, COLOR_BACKGROUND},
+    printer::{Printer, Screen},
+    style::ColorString,
 };
 
 pub fn progress_bar(percentage: u8, width: usize) -> String {

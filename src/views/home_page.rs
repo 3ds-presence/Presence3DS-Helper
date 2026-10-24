@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::model::{Message, Printer, Screen};
-use crate::utils::constant::{COLOR_BACKGROUND, COLOR_RED};
-use crate::utils::{ColorString, shape};
-use crate::views::Route;
-use crate::views::{DownloadPresence3DSPage, ImportConfigPage, Page};
+use crate::router::{Message, Page, Route};
+use crate::ui::constants::{COLOR_BACKGROUND, COLOR_RED};
+use crate::ui::printer::{Printer, Screen};
+use crate::ui::{style::ColorString, widgets};
+use crate::views::{DownloadPresence3DSPage, ImportConfigPage};
 use ctru::services::hid::{Hid, KeyPad};
 
 struct RouteName {
@@ -34,7 +34,7 @@ pub struct HomePage {
 impl Page for HomePage {
     fn render(&self, printer: &mut Printer<'_>) {
         printer.clear_with_background(Screen::Top, COLOR_BACKGROUND);
-        printer.println(Screen::Top, shape::title_bar(Screen::Top));
+        printer.println(Screen::Top, widgets::title_bar(Screen::Top));
         printer.println(Screen::Top, "");
 
         for (i, route) in self.router.iter().enumerate() {

@@ -16,12 +16,14 @@
 
 use std::sync::{Arc, Mutex};
 
-use crate::model::{Message, Printer, Screen};
+use crate::router::{Message, Page, Route};
+use crate::ui::constants::{COLOR_BACKGROUND, COLOR_RED};
+use crate::ui::printer::{Printer, Screen};
+use crate::ui::style::ColorString;
+use crate::utils::Camera;
 use crate::utils::camera::{blit_to_top_screen, decode_qr_from_luma};
-use crate::utils::constant::{COLOR_BACKGROUND, COLOR_RED};
 use crate::utils::worker_thread;
-use crate::utils::{Camera, ColorString};
-use crate::views::{ConfirmScanPage, HomePage, Page, Route};
+use crate::views::{ConfirmScanPage, HomePage};
 use ctru::services::hid::{Hid, KeyPad};
 
 enum QrScanResult {

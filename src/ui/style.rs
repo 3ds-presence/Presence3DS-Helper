@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::model::Screen;
+use crate::ui::printer::Screen;
 use std::fmt::{Display, Formatter, Result, Write};
 use std::string::String;
 
-use crate::utils::constant::{CHAR_PER_LINE_BOTTOM, CHAR_PER_LINE_TOP};
+use crate::ui::constants::{CHAR_PER_LINE_BOTTOM, CHAR_PER_LINE_TOP};
 
 pub enum Attribute {
     Bold,

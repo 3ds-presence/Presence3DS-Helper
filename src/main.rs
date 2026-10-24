@@ -19,7 +19,8 @@ use ctru::services::ps::Ps;
 use ctru::services::soc::Soc;
 
 mod app;
-mod model;
+mod router;
+mod ui;
 mod utils;
 mod views;
 

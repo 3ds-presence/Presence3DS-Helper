@@ -17,7 +17,7 @@
 use std::fmt::Display;
 use std::io::Write;
 
-use crate::utils::constant::MAX_LINES;
+use crate::ui::constants::MAX_LINES;
 use crate::utils::formatter::encode_cp437;
 use ctru::console::Console;
 
