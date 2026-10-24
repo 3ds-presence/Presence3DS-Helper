@@ -17,12 +17,12 @@
 use ctru::services::hid::{Hid, KeyPad};
 
 use crate::router::{Message, Page, Route};
-use crate::ui::constants::{COLOR_BACKGROUND, COLOR_GREEN, COLOR_RED};
+use crate::ui::constants::{COLOR_BACKGROUND, COLOR_GREEN, COLOR_RED, MAX_LINES};
 use crate::ui::printer::{Printer, Screen};
 use crate::ui::{style::ColorString, widgets};
 use crate::utils::sd_file::{ensure_dir, write_file};
 use crate::utils::validate_config::validate_config;
-use crate::views::HomePage;
+use crate::views::{HomePage, ImportConfigPage};
 
 pub struct ConfirmScanPage {
     uuid: Option<String>,
@@ -36,41 +36,85 @@ impl Page for ConfirmScanPage {
     fn render(&self, printer: &mut Printer<'_>) {
         printer.clear_with_background(Screen::Top, COLOR_BACKGROUND);
         printer.println(Screen::Top, widgets::title_bar(Screen::Top));
-        if let (Some(uuid), Some(_aes), Some(host), Some(port)) =
-            (&self.uuid, &self.aes, &self.host, &self.port)
-        {
+        match (&self.uuid, &self.host, &self.port) {
+            (Some(uuid), Some(host), Some(port)) => {
+                printer.println(
+                    Screen::Top,
+                    ColorString::centered_full_line(
+                        "\nImport config",
+                        Screen::Top,
+                        COLOR_BACKGROUND,
+                    ),
+                );
+                printer.goto_line(Screen::Top, 8);
+                printer.println(
+                    Screen::Top,
+                    ColorString::centered_full_line(
+                        &format!(
+                            "UUID: {uuid}\n\
+                             \n\
+                             Host: {host}:{port}"
+                        ),
+                        Screen::Top,
+                        COLOR_BACKGROUND,
+                    ),
+                );
+            }
+            _ => {
+                printer.println(
+                    Screen::Top,
+                    ColorString::centered_full_line(
+                        "\nInvalid config.",
+                        Screen::Top,
+                        COLOR_BACKGROUND,
+                    )
+                    .with_fg_color(COLOR_RED),
+                );
+            }
+        }
+
+        if let Some(Err(error)) = &self.status {
             printer.println(
                 Screen::Top,
-                format!(
-                    "Import config : \n\
-                     UUID: {uuid}\n\
-                     Host: {host}:{port}"
-                ),
-            );
-        } else {
-            printer.println(
-                Screen::Top,
-                "Import config : \n\
-                 Invalid config.",
+                ColorString::centered_full_line(error, Screen::Top, COLOR_BACKGROUND)
+                    .with_fg_color(COLOR_RED),
             );
         }
 
-        printer.clear_with_background(Screen::Bottom, COLOR_BACKGROUND);
-        match &self.status {
-            Some(Ok(())) => printer.println(
-                Screen::Bottom,
-                ColorString::new(
-                    "Saved to sdmc:/presence3ds/discord_rpc.conf",
-                    Screen::Bottom,
-                )
-                .with_fg_color(COLOR_GREEN),
-            ),
-            Some(Err(error)) => printer.println(
-                Screen::Bottom,
-                ColorString::new(error, Screen::Bottom).with_fg_color(COLOR_RED),
-            ),
-            None => printer.println(Screen::Bottom, "A: save | B: back to home | START: exit"),
+        let (status, status_color) = match &self.status {
+            None => ("Press A to save\n", None),
+            Some(Err(_)) if self.uuid.is_some() => ("Press A to retry saving\n", None),
+            Some(Err(_)) => ("Press A to scan again\n", None),
+            Some(Ok(())) => ("Saved !\n", Some(COLOR_GREEN)),
+        };
+
+        printer.goto_line(Screen::Top, MAX_LINES - 3);
+        let mut status_line =
+            ColorString::centered_full_line(status, Screen::Top, COLOR_BACKGROUND);
+        if let Some(color) = status_color {
+            status_line = status_line.with_fg_color(color);
         }
+        printer.println(Screen::Top, status_line);
+        printer.println(
+            Screen::Top,
+            ColorString::centered_full_line(
+                "Press B to return to the menu",
+                Screen::Top,
+                COLOR_BACKGROUND,
+            ),
+        );
+
+        printer.clear_with_background(Screen::Bottom, COLOR_BACKGROUND);
+
+        printer.goto_last_line(Screen::Bottom);
+        printer.println(
+            Screen::Bottom,
+            ColorString::centered_full_line(
+                "Press START to exit ⌂",
+                Screen::Bottom,
+                COLOR_BACKGROUND,
+            ),
+        );
     }
 
     fn handle_input(&mut self, hid: &Hid) -> Message {
@@ -81,9 +125,26 @@ impl Page for ConfirmScanPage {
         if input.contains(KeyPad::B) {
             return Message::Goto(Route::Home(HomePage::new()), String::new());
         }
-        if input.contains(KeyPad::A) && self.status.is_none() {
-            self.status = Some(self.save());
-            return Message::NeedRedraw;
+        if input.contains(KeyPad::A) {
+            match &self.status {
+                None => {
+                    self.status = Some(self.save());
+                    return Message::NeedRedraw;
+                }
+                Some(Err(_)) if self.uuid.is_some() => {
+                    // Config was valid but saving failed
+                    self.status = Some(self.save());
+                    return Message::NeedRedraw;
+                }
+                Some(Err(_)) => {
+                    // Invalid config
+                    return Message::Goto(
+                        Route::ImportConfig(ImportConfigPage::new()),
+                        String::new(),
+                    );
+                }
+                Some(Ok(())) => {}
+            }
         }
 
         Message::None

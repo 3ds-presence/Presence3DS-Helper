@@ -53,18 +53,36 @@ impl Page for ImportConfigPage {
 
         printer.clear_with_background(Screen::Bottom, COLOR_BACKGROUND);
         match &self.camera {
-            Some(Ok(_)) => printer.println(
-                Screen::Bottom,
-                ColorString::centered_full_line(
-                    "Point the QR code at the camera\n\
-                     Scanning ...\n\
-                     \n\
-                     \n\
-                     Find the QR code in 3DS Presence website (https://3ds-presence.top)",
+            Some(Ok(_)) => {
+                printer.println(
                     Screen::Bottom,
-                    COLOR_BACKGROUND,
-                ),
-            ),
+                    ColorString::centered_full_line(
+                        "\nPoint the QR code at the camera\n\
+                     \n\
+                     \n\
+                     Find the QR code \n\
+                     in 3DS Presence website\n\
+                     \n\
+                     https://3ds-presence.top\n\
+                     \n\
+                     \n\
+                     On the website, follow these steps:\n",
+                        Screen::Bottom,
+                        COLOR_BACKGROUND,
+                    ),
+                );
+                printer.println(
+                    Screen::Bottom,
+                    ColorString::new(
+                        "\
+                            \t→ Login with Discord\n\
+                            \t→ Configuration\n\
+                            \t→ Show QR code",
+                        Screen::Bottom,
+                    )
+                    .with_bg_color(COLOR_BACKGROUND),
+                );
+            }
             Some(Err(error)) => printer.println(
                 Screen::Bottom,
                 ColorString::new(error, Screen::Bottom).with_fg_color(COLOR_RED),
@@ -87,7 +105,7 @@ impl Page for ImportConfigPage {
             printer.println(
                 Screen::Bottom,
                 ColorString::centered_full_line(
-                    "Press START to exit",
+                    "Press START to exit ⌂",
                     Screen::Bottom,
                     COLOR_BACKGROUND,
                 ),

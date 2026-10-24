@@ -58,7 +58,7 @@ impl Page for HomePage {
         printer.println(
             Screen::Bottom,
             ColorString::centered_full_line(
-                "Press START to exit",
+                "Press START to exit ⌂",
                 Screen::Bottom,
                 COLOR_BACKGROUND,
             ),

@@ -64,8 +64,13 @@ impl<'a> App<'a> {
                 false
             }
             Message::Goto(route, payload) => {
+                let leaves_manual_drawing =
+                    self.state.draws_top_screen_manually() && !route.draws_top_screen_manually();
                 self.state = route;
                 self.state.on_goto(payload);
+                if leaves_manual_drawing {
+                    self.printer.top_screen.swap_buffers();
+                }
                 self.render();
                 false
             }
