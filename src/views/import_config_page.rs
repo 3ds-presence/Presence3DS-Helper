@@ -30,15 +30,28 @@ enum QrScanResult {
 }
 
 pub struct ImportConfigPage {
-    camera: Result<Camera, String>,
+    camera: Option<Result<Camera, String>>,
     pending: Option<Arc<Mutex<Option<QrScanResult>>>>,
 }
 
 impl Page for ImportConfigPage {
     fn render(&self, printer: &mut Printer<'_>) {
+        printer.clear_with_background(Screen::Top, COLOR_BACKGROUND);
+        if self.camera.is_none() {
+            printer.new_line(Screen::Top, 14);
+            printer.println(
+                Screen::Top,
+                ColorString::centered_full_line(
+                    "Starting camera ...",
+                    Screen::Top,
+                    COLOR_BACKGROUND,
+                ),
+            );
+        }
+
         printer.clear_with_background(Screen::Bottom, COLOR_BACKGROUND);
         match &self.camera {
-            Ok(_) => printer.println(
+            Some(Ok(_)) => printer.println(
                 Screen::Bottom,
                 ColorString::centered_full_line(
                     "Point the QR code at the camera\n\
@@ -50,23 +63,34 @@ impl Page for ImportConfigPage {
                     COLOR_BACKGROUND,
                 ),
             ),
-            Err(error) => printer.println(
+            Some(Err(error)) => printer.println(
                 Screen::Bottom,
                 ColorString::new(error, Screen::Bottom).with_fg_color(COLOR_RED),
             ),
+            None => {
+                // Show nothing, the camera is starting
+            }
         }
 
-        printer.println(Screen::Bottom, "\n\nPress B to return to the menu");
-
-        printer.goto_last_line(Screen::Bottom);
-        printer.println(
-            Screen::Bottom,
-            ColorString::centered_full_line(
-                "Press START to exit",
+        if self.camera.is_some() {
+            printer.println(
                 Screen::Bottom,
-                COLOR_BACKGROUND,
-            ),
-        );
+                ColorString::centered_full_line(
+                    "\n\nPress B to return to the menu",
+                    Screen::Bottom,
+                    COLOR_BACKGROUND,
+                ),
+            );
+            printer.goto_last_line(Screen::Bottom);
+            printer.println(
+                Screen::Bottom,
+                ColorString::centered_full_line(
+                    "Press START to exit",
+                    Screen::Bottom,
+                    COLOR_BACKGROUND,
+                ),
+            );
+        }
     }
 
     fn handle_input(&mut self, hid: &Hid) -> Message {
@@ -82,11 +106,16 @@ impl Page for ImportConfigPage {
     }
 
     fn update(&mut self) -> Message {
-        let Ok(camera) = &mut self.camera else {
-            return Message::None;
+        let just_initialized = if self.camera.is_none() {
+            self.camera = Some(Camera::new().map_err(|error| error.to_string()));
+            true
+        } else {
+            false
         };
 
-        if camera.poll() {
+        if let Some(Ok(camera)) = &mut self.camera
+            && camera.poll()
+        {
             let (width, height) = camera.size();
             blit_to_top_screen(camera.frame(), width, height);
 
@@ -95,18 +124,21 @@ impl Page for ImportConfigPage {
             }
         }
 
+        if just_initialized {
+            return Message::NeedRedraw;
+        }
         Message::None
     }
 
     fn draws_top_screen_manually(&self) -> bool {
-        true
+        matches!(self.camera, Some(Ok(_)))
     }
 }
 
 impl ImportConfigPage {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
-            camera: Camera::new().map_err(|error| error.to_string()),
+            camera: None,
             pending: None,
         }
     }

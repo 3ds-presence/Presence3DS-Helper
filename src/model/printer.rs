@@ -64,8 +64,15 @@ impl<'a> Printer<'a> {
 
     pub fn clear_with_background(&mut self, screen: Screen, color: [u8; 3]) {
         self.select_screen(screen);
-        print!("\x1b[0m\x1b[48;2;{};{};{}m", color[0], color[1], color[2]);
-        print!("\x1b[2J");
+
+        let mut out = std::io::stdout();
+        let _ = write!(
+            out,
+            "\x1b[0m\x1b[48;2;{};{};{}m\x1b[2J",
+            color[0], color[1], color[2]
+        );
+        let _ = out.flush();
+
         *self.line_mut(screen) = 0;
     }
 
