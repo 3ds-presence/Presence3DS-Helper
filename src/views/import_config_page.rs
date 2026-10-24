@@ -67,7 +67,7 @@ impl Page for ImportConfigPage {
             }
             Err(error) => printer.println(
                 Screen::Bottom,
-                ColorString::new(error).with_fg_color(COLOR_RED),
+                ColorString::new(error, Screen::Bottom).with_fg_color(COLOR_RED),
             ),
         }
 

@@ -18,7 +18,7 @@ use crate::{
     model::{Printer, Screen},
     utils::{
         ColorString,
-        constant::{COLOR_ACCENT, COLOR_BACKGROUND, COLOR_BACKGROUND_INVERTED},
+        constant::{COLOR_ACCENT, COLOR_BACKGROUND},
     },
 };
 
@@ -37,8 +37,11 @@ pub fn download_section(
     total: usize,
     percentage: u8,
 ) {
-let print_here = |printer: &mut Printer<'_>, txt: &str| {
-        printer.print(Screen::Top, ColorString::new(txt).with_bg_color(COLOR_BACKGROUND));
+    let print_here = |printer: &mut Printer<'_>, txt: &str| {
+        printer.print(
+            Screen::Top,
+            ColorString::new(txt, Screen::Top).with_bg_color(COLOR_BACKGROUND),
+        );
     };
 
     printer.println(

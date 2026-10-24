@@ -41,21 +41,28 @@ impl Page for HomePage {
             if i == self.current_selection {
                 printer.println(
                     Screen::Top,
-                    ColorString::new(route.name)
+                    ColorString::new(route.name, Screen::Top)
                         .with_fg_color(COLOR_RED)
                         .with_bg_color(COLOR_BACKGROUND),
                 );
             } else {
                 printer.println(
                     Screen::Top,
-                    ColorString::new(route.name).with_bg_color(COLOR_BACKGROUND),
+                    ColorString::new(route.name, Screen::Top).with_bg_color(COLOR_BACKGROUND),
                 );
             }
         }
         printer.clear_with_background(Screen::Bottom, COLOR_BACKGROUND);
-        
+
         printer.goto_last_line(Screen::Bottom);
-        printer.println(Screen::Bottom, ColorString::centered_full_line("Press START to exit", Screen::Bottom, COLOR_BACKGROUND));
+        printer.println(
+            Screen::Bottom,
+            ColorString::centered_full_line(
+                "Press START to exit",
+                Screen::Bottom,
+                COLOR_BACKGROUND,
+            ),
+        );
     }
 
     fn handle_input(&mut self, hid: &Hid) -> Message {

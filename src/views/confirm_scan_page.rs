@@ -49,12 +49,15 @@ impl Page for ConfirmScanPage {
         match &self.status {
             Some(Ok(())) => printer.println(
                 Screen::Bottom,
-                ColorString::new("Saved to sdmc:/presence3ds/discord_rpc.conf")
-                    .with_fg_color(COLOR_GREEN),
+                ColorString::new(
+                    "Saved to sdmc:/presence3ds/discord_rpc.conf",
+                    Screen::Bottom,
+                )
+                .with_fg_color(COLOR_GREEN),
             ),
             Some(Err(error)) => printer.println(
                 Screen::Bottom,
-                ColorString::new(error).with_fg_color(COLOR_RED),
+                ColorString::new(error, Screen::Bottom).with_fg_color(COLOR_RED),
             ),
             None => printer.println(Screen::Bottom, "A: save | B: back to home | START: exit"),
         }
