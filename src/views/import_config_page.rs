@@ -38,41 +38,25 @@ impl Page for ImportConfigPage {
     fn render(&self, printer: &mut Printer<'_>) {
         printer.clear_with_background(Screen::Bottom, COLOR_BACKGROUND);
         match &self.camera {
-            Ok(_) => {
-                printer.println(
+            Ok(_) => printer.println(
+                Screen::Bottom,
+                ColorString::centered_full_line(
+                    "Point the QR code at the camera\n\
+                     Scanning ...\n\
+                     \n\
+                     \n\
+                     Find the QR code in 3DS Presence website (https://3ds-presence.top)",
                     Screen::Bottom,
-                    ColorString::centered_full_line(
-                        "Point the QR code at the camera",
-                        Screen::Bottom,
-                        COLOR_BACKGROUND,
-                    ),
-                );
-                printer.println(
-                    Screen::Bottom,
-                    ColorString::centered_full_line(
-                        "Scanning ...",
-                        Screen::Bottom,
-                        COLOR_BACKGROUND,
-                    ),
-                );
-                printer.new_line(Screen::Bottom, 2);
-                printer.println(
-                    Screen::Bottom,
-                    ColorString::centered_full_line(
-                        "Find the QR code in 3DS Presence website (https://3ds-presence.top)",
-                        Screen::Bottom,
-                        COLOR_BACKGROUND,
-                    ),
-                );
-            }
+                    COLOR_BACKGROUND,
+                ),
+            ),
             Err(error) => printer.println(
                 Screen::Bottom,
                 ColorString::new(error, Screen::Bottom).with_fg_color(COLOR_RED),
             ),
         }
 
-        printer.new_line(Screen::Bottom, 2);
-        printer.println(Screen::Bottom, "Press B to return to the menu");
+        printer.println(Screen::Bottom, "\n\nPress B to return to the menu");
 
         printer.goto_last_line(Screen::Bottom);
         printer.println(

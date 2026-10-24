@@ -17,10 +17,10 @@
 use ctru::services::hid::{Hid, KeyPad};
 
 use crate::model::{Message, Printer, Screen};
-use crate::utils::{ColorString, shape};
 use crate::utils::constant::{COLOR_BACKGROUND, COLOR_GREEN, COLOR_RED};
 use crate::utils::sd_file::{ensure_dir, write_file};
 use crate::utils::validate_config::validate_config;
+use crate::utils::{ColorString, shape};
 use crate::views::{HomePage, Page, Route};
 
 pub struct ConfirmScanPage {
@@ -34,15 +34,24 @@ pub struct ConfirmScanPage {
 impl Page for ConfirmScanPage {
     fn render(&self, printer: &mut Printer<'_>) {
         printer.clear_with_background(Screen::Top, COLOR_BACKGROUND);
-        shape::title_bar(Screen::Top);
-        printer.println(Screen::Top, "Import config : ");
+        printer.println(Screen::Top, shape::title_bar(Screen::Top));
         if let (Some(uuid), Some(_aes), Some(host), Some(port)) =
             (&self.uuid, &self.aes, &self.host, &self.port)
         {
-            printer.println(Screen::Top, format!("UUID: {uuid}"));
-            printer.println(Screen::Top, format!("Host: {host}:{port}"));
+            printer.println(
+                Screen::Top,
+                format!(
+                    "Import config : \n\
+                     UUID: {uuid}\n\
+                     Host: {host}:{port}"
+                ),
+            );
         } else {
-            printer.println(Screen::Top, "Invalid config.");
+            printer.println(
+                Screen::Top,
+                "Import config : \n\
+                 Invalid config.",
+            );
         }
 
         printer.clear_with_background(Screen::Bottom, COLOR_BACKGROUND);

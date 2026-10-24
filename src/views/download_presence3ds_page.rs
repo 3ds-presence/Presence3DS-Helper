@@ -42,11 +42,10 @@ impl Page for DownloadPresence3DSPage {
     fn render(&self, printer: &mut Printer<'_>) {
         printer.clear_with_background(Screen::Top, COLOR_BACKGROUND);
         printer.println(Screen::Top, shape::title_bar(Screen::Top));
-        printer.println(Screen::Top, "");
         printer.println(
             Screen::Top,
             ColorString::centered_full_line(
-                "Download/Update Presence 3DS",
+                "\nDownload/Update Presence 3DS",
                 Screen::Top,
                 COLOR_BACKGROUND,
             ),
@@ -72,11 +71,10 @@ impl Page for DownloadPresence3DSPage {
             } => {
                 shape::download_section(printer, TARGET_FILE, *current, *total, *percentage);
 
-                printer.println(Screen::Top, "");
                 printer.println(
                     Screen::Top,
                     ColorString::centered_full_line(
-                        "Do not turn off your 3DS or remove the SD card.",
+                        "\nDo not turn off your 3DS or remove the SD card.",
                         Screen::Top,
                         COLOR_BACKGROUND,
                     ),
@@ -86,65 +84,59 @@ impl Page for DownloadPresence3DSPage {
                 if self.verifying {
                     printer.println(
                         Screen::Top,
-                        ColorString::centered_full_line("Downloaded, verifying SHA256...", Screen::Top, COLOR_BACKGROUND)
-                    );
-                    printer.println(
-                        Screen::Top,
-                        ColorString::centered_full_line("Do not turn off your 3DS.", Screen::Top, COLOR_BACKGROUND),
+                        ColorString::centered_full_line(
+                            "Downloaded, verifying SHA256...\n\
+                             Do not turn off your 3DS.",
+                            Screen::Top,
+                            COLOR_BACKGROUND,
+                        ),
                     );
                 } else {
                     printer.println(
                         Screen::Top,
-                        ColorString::centered_full_line("Done!", Screen::Top, COLOR_BACKGROUND).with_fg_color(COLOR_GREEN),
+                        ColorString::centered_full_line("Done!", Screen::Top, COLOR_BACKGROUND)
+                            .with_fg_color(COLOR_GREEN),
                     );
                     printer.println(
                         Screen::Top,
-                        ColorString::centered_full_line(&format!("{TARGET_FILE} installed"), Screen::Top, COLOR_BACKGROUND),
-                    );
-                    printer.new_line(Screen::Top, 1);
-                    printer.println(
-                        Screen::Top,
-                        ColorString::centered_full_line("Press A to reboot.", Screen::Top, COLOR_BACKGROUND),
-                    );
-                    printer.println(
-                        Screen::Top,
-                        ColorString::centered_full_line("Press B to return to the menu.", Screen::Top, COLOR_BACKGROUND),
+                        ColorString::centered_full_line(
+                            &format!(
+                                "{TARGET_FILE} installed\n\
+                                 \n\
+                                 Press A to reboot.\n\
+                                 Press B to return to the menu"
+                            ),
+                            Screen::Top,
+                            COLOR_BACKGROUND,
+                        ),
                     );
                 }
             }
             JobStatus::Failed(error) => {
+                let trace_color = [145, 115, 115];
+                let details = error.split(": ").collect::<Vec<_>>().join("\n");
+
                 printer.println(
                     Screen::Top,
                     ColorString::centered_full_line("Failed!", Screen::Top, COLOR_BACKGROUND)
                         .with_fg_color(COLOR_RED),
                 );
-
-                printer.new_line(Screen::Top, 1);
-
-                let trace_color = [145, 115, 115];
                 printer.println(
                     Screen::Top,
                     ColorString::centered_full_line(
-                        "Error details:",
+                        &format!(
+                            "\n\nError details:\n\
+                             {details}"
+                        ),
                         Screen::Top,
                         COLOR_BACKGROUND,
                     )
                     .with_fg_color(trace_color),
                 );
-
-                error.split(": ").for_each(|elem| {
-                    printer.println(
-                        Screen::Top,
-                        ColorString::centered_full_line(elem, Screen::Top, COLOR_BACKGROUND)
-                            .with_fg_color(trace_color),
-                    );
-                });
-
-                printer.new_line(Screen::Top, 1);
                 printer.println(
                     Screen::Top,
                     ColorString::centered_full_line(
-                        "Press A to retry.",
+                        "\n\nPress A to retry.",
                         Screen::Top,
                         COLOR_BACKGROUND,
                     ),
@@ -167,7 +159,14 @@ impl Page for DownloadPresence3DSPage {
 
         if !self.job.is_running() {
             printer.goto_last_line(Screen::Bottom);
-            printer.println(Screen::Bottom, ColorString::centered_full_line("Press START to exit", Screen::Bottom, COLOR_BACKGROUND));
+            printer.println(
+                Screen::Bottom,
+                ColorString::centered_full_line(
+                    "Press START to exit",
+                    Screen::Bottom,
+                    COLOR_BACKGROUND,
+                ),
+            );
         }
     }
 

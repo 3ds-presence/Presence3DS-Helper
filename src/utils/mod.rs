@@ -20,14 +20,14 @@ pub mod color_string;
 pub mod constant;
 pub mod download_job;
 pub mod downloader;
+pub mod formatter;
 pub mod hash;
+pub mod power;
 pub mod sd_card;
 pub mod sd_file;
 pub mod shape;
 pub mod validate_config;
 pub mod worker_thread;
-pub mod power;
-pub mod formatter;
 
 pub use camera::Camera;
 pub use color_string::ColorString;

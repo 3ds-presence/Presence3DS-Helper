@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::io;
-use std::thread;
 use ctru_sys::s32;
 use io::Result;
+use std::io;
+use std::thread;
 
 pub enum ThreadPriority {
     High = 0x18,

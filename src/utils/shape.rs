@@ -25,8 +25,8 @@ use crate::{
 pub fn progress_bar(percentage: u8, width: usize) -> String {
     let filled = (percentage as usize) * width / 100;
     let mut bar = String::with_capacity(width);
-    bar.extend(std::iter::repeat_n('#', filled));
-    bar.extend(std::iter::repeat_n('-', width - filled));
+    bar.extend(std::iter::repeat_n('█', filled));
+    bar.extend(std::iter::repeat_n('░', width - filled));
     bar
 }
 
@@ -57,10 +57,7 @@ pub fn download_section(
     print_here(printer, " ".repeat(10).as_str());
     print_here(printer, "║");
     print_here(printer, &progress_bar(percentage, 25));
-    print_here(
-        printer,
-        format!("{:02}%", percentage.min(99)).as_str(),
-    );
+    print_here(printer, format!("{:02}%", percentage.min(99)).as_str());
     print_here(printer, "║");
     print_here(printer, " ".repeat(10).as_str());
     printer.println(Screen::Top, "");
