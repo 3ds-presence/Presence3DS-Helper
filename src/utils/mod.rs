@@ -26,6 +26,7 @@ pub mod sd_card;
 pub mod sd_file;
 pub mod validate_config;
 pub mod worker_thread;
+pub mod network;
 
 pub use camera::Camera;
 pub use download_job::{DownloadJob, JobStatus};

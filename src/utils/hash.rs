@@ -20,6 +20,7 @@ use std::io::{BufReader, Read};
 use sha2::{Digest, Sha256};
 
 use crate::utils::sd_file::{SdCardError, sd_path};
+use crate::utils::network::fetch;
 
 const HASH_CHUNK_SIZE: usize = 32 * 1024;
 
@@ -49,14 +50,7 @@ pub fn sha256_hex_of_file(path: &str) -> Result<String, SdCardError> {
 }
 
 pub fn fetch_expected_sha256(url: &str) -> Result<String, String> {
-    let agent = ureq::Agent::new_with_defaults();
-    let response = agent.get(url).call().map_err(|error| error.to_string())?;
-
-    let mut reader = response.into_body().into_reader();
-    let mut text = String::new();
-    reader
-        .read_to_string(&mut text)
-        .map_err(|error| format!("cannot read sha256 file from {url}: {error}"))?;
+    let text = fetch(url)?;
 
     parse_sha256_text(&text).ok_or_else(|| {
         format!("invalid sha256 file from {url}: expected 64 hex characters, got {text:?}")
