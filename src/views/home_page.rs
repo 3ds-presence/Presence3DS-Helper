@@ -15,9 +15,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::router::{Message, Page, Route};
-use crate::ui::constants::{COLOR_BACKGROUND, COLOR_RED};
+use crate::ui::constants::{COLOR_BACKGROUND, COLOR_RED, MAX_LINES};
 use crate::ui::printer::{Printer, Screen};
 use crate::ui::{style::ColorString, widgets};
+use crate::utils::network::get_latest_presence_version;
+use crate::utils::{PresenceVersion, presence};
 use crate::views::{DownloadPresence3DSPage, ImportConfigPage};
 use ctru::services::hid::{Hid, KeyPad};
 
@@ -29,6 +31,7 @@ struct RouteName {
 pub struct HomePage {
     current_selection: usize,
     router: Box<[RouteName]>,
+    presence_ver: Option<PresenceVersion>,
 }
 
 impl Page for HomePage {
@@ -53,6 +56,47 @@ impl Page for HomePage {
             }
         }
         printer.clear_with_background(Screen::Bottom, COLOR_BACKGROUND);
+
+        let nb_line = 10;
+        printer.goto_line(Screen::Bottom, (MAX_LINES - nb_line) / 2);
+        printer.println(
+            Screen::Bottom,
+            ColorString::centered_full_line(
+                "\
+                        3DS Presence\n\
+                        Discord RPC for the Nintendo 3DS\n\
+                        \n\
+                        Use this app to download Presence3DS\n\
+                        and connect to your 3DS Presence account\n\
+                        \n\
+                        \n\
+                        Presence3DS status:\n\
+                    ",
+                Screen::Bottom,
+                COLOR_BACKGROUND,
+            ),
+        );
+
+        let installed_version = self
+            .presence_ver
+            .as_ref()
+            .map_or_else(|| "Not installed".into(), std::string::ToString::to_string);
+
+        printer.println(
+            Screen::Bottom,
+            ColorString::new(
+                &format!("\tInstalled version: {installed_version}"),
+                Screen::Bottom,
+            )
+            .with_bg_color(COLOR_BACKGROUND),
+        );
+
+        let latest_version = get_latest_presence_version().unwrap_or_else(|_| "Unknown".into());
+        printer.println(
+            Screen::Bottom,
+            ColorString::new(&format!("\tLatest version: {latest_version}"), Screen::Bottom)
+                .with_bg_color(COLOR_BACKGROUND),
+        );
 
         printer.goto_last_line(Screen::Bottom);
         printer.println(
@@ -103,6 +147,7 @@ impl HomePage {
         Self {
             current_selection: 0,
             router: router.into(),
+            presence_ver: presence::version().ok(),
         }
     }
 }

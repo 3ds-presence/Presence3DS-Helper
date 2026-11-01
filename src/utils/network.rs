@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::io::Read;
+use std::{io::Read, sync::OnceLock};
 use ureq::Agent;
 
 pub fn fetch(url: &str) -> Result<String, String> {
@@ -27,4 +27,16 @@ pub fn fetch(url: &str) -> Result<String, String> {
         .read_to_string(&mut text)
         .map_err(|error| format!("cannot read from {url}: {error}"))?;
     Ok(text)
+}
+
+static LATEST_VERSION: OnceLock<String> = OnceLock::new();
+pub fn get_latest_presence_version() -> Result<String, String> {
+    if let Some(version) = LATEST_VERSION.get() {
+        return Ok(version.clone());
+    }
+
+    let url = "https://3ds-presence.top/dyn/version";
+    let version = fetch(url)?;
+    let _ = LATEST_VERSION.set(version.clone());
+    Ok(version)
 }

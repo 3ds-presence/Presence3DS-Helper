@@ -16,10 +16,13 @@
 
 use std::ffi::CString;
 use std::fmt;
+use std::sync::OnceLock;
 
 use ctru::error::ResultCode;
 use ctru::services::svc::{HandleExt, make_ipc_header};
 use ctru_sys::Handle;
+
+static PRESENCE_VERSION_SINGLETON: OnceLock<Option<PresenceVersion>> = OnceLock::new();
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PresenceVersion {
@@ -98,15 +101,27 @@ pub fn is_presence3ds_installed() -> bool {
 
 /// Get the version of `Presence3DS` installed on the system or an error if `Presence3DS` is not installed or not running.
 pub fn version() -> ctru::Result<PresenceVersion> {
-    let installed = is_presence3ds_installed();
-    if !installed {
-        return Err(ctru::Error::Other(
-            "Presence3DS is not installed or not running".to_string(),
-        ));
-    }
+    let data = PRESENCE_VERSION_SINGLETON.get_or_init(|| {
+        if !is_presence3ds_installed() {
+            return None;
+        }
 
-    let service = ServiceHandle::new_from_service_name("p3ds:ver")?;
-    let reply = unsafe { service.send_service_request(vec![make_ipc_header(0x1, 0, 0)], 3)? };
+        let service = ServiceHandle::new_from_service_name("p3ds:ver").ok()?;
+        let reply = unsafe {
+            service
+                .send_service_request(vec![make_ipc_header(0x1, 0, 0)], 3)
+                .ok()?
+        };
 
-    Ok(PresenceVersion::from_packed(reply[2]))
+        Some(PresenceVersion::from_packed(reply[2]))
+    });
+
+    data.as_ref().map_or_else(
+        || {
+            Err(ctru::Error::Other(
+                "Presence3DS is not installed or not running".to_string(),
+            ))
+        },
+        |version| Ok(*version),
+    )
 }
