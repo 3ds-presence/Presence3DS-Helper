@@ -18,8 +18,9 @@ use crate::router::{Message, Page, Route};
 use crate::ui::constants::{COLOR_BACKGROUND, COLOR_RED, MAX_LINES};
 use crate::ui::printer::{Printer, Screen};
 use crate::ui::{style::ColorString, widgets};
-use crate::utils::network::get_latest_presence_version;
-use crate::utils::{PresenceVersion, presence};
+use crate::utils::PresenceVersion;
+use crate::utils::latest_version::LatestVersionFetch;
+use crate::utils::presence;
 use crate::views::{DownloadPresence3DSPage, ImportConfigPage};
 use ctru::services::hid::{Hid, KeyPad};
 
@@ -32,6 +33,7 @@ pub struct HomePage {
     current_selection: usize,
     router: Box<[RouteName]>,
     presence_ver: Option<PresenceVersion>,
+    latest_version: LatestVersionFetch,
 }
 
 impl Page for HomePage {
@@ -85,17 +87,19 @@ impl Page for HomePage {
         printer.println(
             Screen::Bottom,
             ColorString::new(
-                &format!("\tInstalled version: {installed_version}"),
+                &format!("\tInstalled version\t: {installed_version}"),
                 Screen::Bottom,
             )
             .with_bg_color(COLOR_BACKGROUND),
         );
 
-        let latest_version = get_latest_presence_version().unwrap_or_else(|_| "Unknown".into());
         printer.println(
             Screen::Bottom,
-            ColorString::new(&format!("\tLatest version: {latest_version}"), Screen::Bottom)
-                .with_bg_color(COLOR_BACKGROUND),
+            ColorString::new(
+                &format!("\t\tLatest version\t: {}", self.latest_version),
+                Screen::Bottom,
+            )
+            .with_bg_color(COLOR_BACKGROUND),
         );
 
         printer.goto_last_line(Screen::Bottom);
@@ -107,6 +111,14 @@ impl Page for HomePage {
                 COLOR_BACKGROUND,
             ),
         );
+    }
+
+    fn update(&mut self) -> Message {
+        if self.latest_version.update() {
+            Message::NeedRedraw
+        } else {
+            Message::None
+        }
     }
 
     fn handle_input(&mut self, hid: &Hid) -> Message {
@@ -148,6 +160,7 @@ impl HomePage {
             current_selection: 0,
             router: router.into(),
             presence_ver: presence::version().ok(),
+            latest_version: LatestVersionFetch::start(),
         }
     }
 }

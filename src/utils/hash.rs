@@ -19,8 +19,8 @@ use std::io::{BufReader, Read};
 
 use sha2::{Digest, Sha256};
 
-use crate::utils::sd_file::{SdCardError, sd_path};
 use crate::utils::network::fetch;
+use crate::utils::sd_file::{SdCardError, sd_path};
 
 const HASH_CHUNK_SIZE: usize = 32 * 1024;
 

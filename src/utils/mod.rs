@@ -20,13 +20,14 @@ pub mod download_job;
 pub mod downloader;
 pub mod formatter;
 pub mod hash;
+pub mod latest_version;
+pub mod network;
 pub mod power;
 pub mod presence;
 pub mod sd_card;
 pub mod sd_file;
 pub mod validate_config;
 pub mod worker_thread;
-pub mod network;
 
 pub use camera::Camera;
 pub use download_job::{DownloadJob, JobStatus};
