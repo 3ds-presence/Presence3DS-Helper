@@ -79,15 +79,16 @@ impl Page for HomePage {
             ),
         );
 
-        let installed_version = self
-            .presence_ver
-            .as_ref()
-            .map_or_else(|| "Not installed".into(), std::string::ToString::to_string);
+        let (installed_prefix, latest_prefix, installed_version) =
+            self.presence_ver.as_ref().map_or_else(
+                || ("\t", "\t\t", "Not installed".into()),
+                |ver| ("\t\t", "\t\t\t", ver.to_string()),
+            );
 
         printer.println(
             Screen::Bottom,
             ColorString::new(
-                &format!("\tInstalled version\t: {installed_version}"),
+                &format!("{installed_prefix}Installed version\t: {installed_version}"),
                 Screen::Bottom,
             )
             .with_bg_color(COLOR_BACKGROUND),
@@ -96,7 +97,7 @@ impl Page for HomePage {
         printer.println(
             Screen::Bottom,
             ColorString::new(
-                &format!("\t\tLatest version\t: {}", self.latest_version),
+                &format!("{latest_prefix}Latest version\t: {}", self.latest_version),
                 Screen::Bottom,
             )
             .with_bg_color(COLOR_BACKGROUND),

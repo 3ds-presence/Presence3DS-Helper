@@ -21,7 +21,7 @@ use crate::ui::{style::ColorString, widgets};
 use crate::utils::hash::verify_file_sha256;
 use crate::utils::power;
 use crate::utils::sd_file::{delete_file, move_file};
-use crate::utils::{DownloadJob, JobStatus, SdCardInfo};
+use crate::utils::{DownloadJob, JobStatus};
 use crate::views::HomePage;
 use ctru::services::hid::{Hid, KeyPad};
 
@@ -34,7 +34,6 @@ const BACKUP_FILE: &str = "boot.firm.old";
 
 pub struct DownloadPresence3DSPage {
     job: DownloadJob,
-    sd_card: Option<SdCardInfo>,
     verifying: bool,
 }
 
@@ -157,7 +156,7 @@ impl Page for DownloadPresence3DSPage {
 
         printer.clear_with_background(Screen::Bottom, COLOR_BACKGROUND);
 
-        if !self.job.is_running() {
+        if !self.job.is_running() && !self.verifying {
             printer.goto_last_line(Screen::Bottom);
             printer.println(
                 Screen::Bottom,
@@ -242,7 +241,6 @@ impl DownloadPresence3DSPage {
     pub fn new() -> Self {
         Self {
             job: DownloadJob::new(URL, STAGED_FILE),
-            sd_card: SdCardInfo::query(),
             verifying: false,
         }
     }
