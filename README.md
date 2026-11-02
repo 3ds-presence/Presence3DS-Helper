@@ -1,9 +1,6 @@
 # Presence 3DS Helper
 This application is part of the [Presence-3DS](https://github.com/3ds-presence/) project.
 
-## WIP
-This application is still in a development phase, and some features are missing or may not work as expected. The design and user interface will be improved in the future.
-
 ## Features
 This application allows you to download and update the Presence 3DS files on your SD card. It also provides a way to import the configuration file using a QR code.
 
